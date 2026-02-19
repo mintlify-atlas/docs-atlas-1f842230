@@ -1,0 +1,123 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Ghostty",
+  "projectDescription": "Fast, feature-rich, cross-platform terminal emulator with GPU acceleration and native UI.",
+  "theme": "aspen",
+  "primaryColor": "#7c3aed",
+  "lightColor": "#a78bfa",
+  "darkColor": "#5b21b6",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "config/overview",
+              "config/appearance",
+              "config/fonts",
+              "config/keybindings",
+              "config/window",
+              "config/terminal"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/themes",
+              "features/shell-integration",
+              "features/splits-tabs",
+              "features/clipboard",
+              "features/performance"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/building-from-source",
+              "guides/troubleshooting",
+              "guides/migration",
+              "guides/contributing"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "CLI Reference",
+        "groups": [
+          {
+            "group": "Commands",
+            "pages": [
+              "cli/overview",
+              "cli/list-fonts",
+              "cli/list-themes",
+              "cli/list-keybinds",
+              "cli/list-actions",
+              "cli/show-config",
+              "cli/validate-config",
+              "cli/edit-config",
+              "cli/ssh-cache"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "libghostty",
+            "pages": [
+              "api/overview",
+              "api/embedding",
+              "api/core-types",
+              "api/configuration",
+              "api/input",
+              "api/rendering"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "GPU-accelerated rendering with Metal and OpenGL",
+    "Cross-platform support (macOS with SwiftUI, Linux with GTK)",
+    "Standards-compliant terminal emulation",
+    "Extensive configuration options",
+    "Built-in themes and custom color schemes",
+    "Flexible keybindings and actions system",
+    "Shell integration for bash, fish, zsh, and more",
+    "Multi-window, tabs, and splits support",
+    "libghostty C API for embedding terminals",
+    "CLI commands for fonts, themes, and configuration management"
+  ],
+  "publicApiSurface": [
+    "+version",
+    "+help",
+    "+list-fonts",
+    "+list-themes",
+    "+list-keybinds",
+    "+list-actions",
+    "+list-colors",
+    "+show-config",
+    "+validate-config",
+    "+edit-config",
+    "+show-face",
+    "+ssh-cache",
+    "+crash-report",
+    "+new-window",
+    "ghostty_app_t (C API)",
+    "ghostty_config_t (C API)",
+    "ghostty_surface_t (C API)",
+    "ghostty_inspector_t (C API)"
+  ]
+}
