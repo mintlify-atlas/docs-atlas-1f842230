@@ -1,0 +1,662 @@
+---
+title: Rendering and Display
+description: Surface rendering and display management in the libghostty C API
+---
+
+# Rendering and Display
+
+The libghostty rendering API provides functions for managing terminal surface rendering, sizing, and display properties.
+
+## Surface Management
+
+### ghostty_surface_new
+
+Creates a new terminal surface.
+
+```c
+ghostty_surface_t ghostty_surface_new(
+    ghostty_app_t app,
+    const ghostty_surface_config_s* config
+);
+```
+
+<ParamField path="app" type="ghostty_app_t" required>
+  The app instance that will own this surface.
+</ParamField>
+
+<ParamField path="config" type="const ghostty_surface_config_s*" required>
+  Configuration for the new surface.
+</ParamField>
+
+**Returns:** A new surface, or NULL on failure.
+
+**Example:**
+```c
+ghostty_surface_config_s config = ghostty_surface_config_new();
+config.platform_tag = GHOSTTY_PLATFORM_MACOS;
+config.platform.macos.nsview = (__bridge void*)myView;
+config.scale_factor = 2.0;
+config.font_size = 13.0;
+
+ghostty_surface_t surface = ghostty_surface_new(app, &config);
+```
+
+### ghostty_surface_free
+
+Frees a surface and its resources.
+
+```c
+void ghostty_surface_free(ghostty_surface_t surface);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface to free.
+</ParamField>
+
+### ghostty_surface_config_new
+
+Creates a default surface configuration.
+
+```c
+ghostty_surface_config_s ghostty_surface_config_new();
+```
+
+**Returns:** A configuration struct with default values.
+
+### ghostty_surface_inherited_config
+
+Gets configuration for creating a derived surface (e.g., split).
+
+```c
+ghostty_surface_config_s ghostty_surface_inherited_config(
+    ghostty_surface_t surface,
+    ghostty_surface_context_e context
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The parent surface.
+</ParamField>
+
+<ParamField path="context" type="ghostty_surface_context_e" required>
+  The context for the new surface (tab, split, etc.).
+</ParamField>
+
+**Returns:** Configuration that inherits settings from the parent surface.
+
+## Rendering
+
+### ghostty_surface_draw
+
+Draws the surface to its render target.
+
+```c
+void ghostty_surface_draw(ghostty_surface_t surface);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface to draw.
+</ParamField>
+
+This function renders the terminal content using the platform's native rendering backend (Metal on macOS/iOS, OpenGL on Linux).
+
+**Example:**
+```c
+// In your render loop
+void render_frame() {
+    ghostty_app_tick(app);
+    ghostty_surface_draw(surface);
+}
+```
+
+### ghostty_surface_refresh
+
+Marks the surface as needing a redraw.
+
+```c
+void ghostty_surface_refresh(ghostty_surface_t surface);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface to refresh.
+</ParamField>
+
+Call this when you want to force a redraw (e.g., after the view is uncovered).
+
+## Size and Scale
+
+### ghostty_surface_set_size
+
+Sets the surface size in pixels.
+
+```c
+void ghostty_surface_set_size(
+    ghostty_surface_t surface,
+    uint32_t width,
+    uint32_t height
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface to resize.
+</ParamField>
+
+<ParamField path="width" type="uint32_t" required>
+  New width in pixels.
+</ParamField>
+
+<ParamField path="height" type="uint32_t" required>
+  New height in pixels.
+</ParamField>
+
+**Example:**
+```c
+// Handle window resize
+void on_window_resize(int width, int height) {
+    ghostty_surface_set_size(surface, width, height);
+}
+```
+
+### ghostty_surface_size
+
+Gets the current surface size.
+
+```c
+ghostty_surface_size_s ghostty_surface_size(ghostty_surface_t surface);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface to query.
+</ParamField>
+
+**Returns:** Surface size information including dimensions and cell size.
+
+**Example:**
+```c
+ghostty_surface_size_s size = ghostty_surface_size(surface);
+printf("Terminal: %dx%d cells (%dx%d px)\n",
+       size.columns, size.rows,
+       size.width_px, size.height_px);
+printf("Cell size: %dx%d px\n",
+       size.cell_width_px, size.cell_height_px);
+```
+
+### ghostty_surface_set_content_scale
+
+Sets the content scale factor (for high-DPI displays).
+
+```c
+void ghostty_surface_set_content_scale(
+    ghostty_surface_t surface,
+    double scale_x,
+    double scale_y
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface.
+</ParamField>
+
+<ParamField path="scale_x" type="double" required>
+  Horizontal scale factor (e.g., 2.0 for Retina).
+</ParamField>
+
+<ParamField path="scale_y" type="double" required>
+  Vertical scale factor.
+</ParamField>
+
+**Example:**
+```c
+// Handle display change
+void on_display_change(double scale) {
+    ghostty_surface_set_content_scale(surface, scale, scale);
+}
+```
+
+## Focus and Occlusion
+
+### ghostty_surface_set_focus
+
+Sets the focus state of the surface.
+
+```c
+void ghostty_surface_set_focus(
+    ghostty_surface_t surface,
+    bool focused
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface.
+</ParamField>
+
+<ParamField path="focused" type="bool" required>
+  Whether the surface has focus.
+</ParamField>
+
+This affects cursor rendering and keyboard input.
+
+**Example:**
+```c
+void on_focus_change(bool has_focus) {
+    ghostty_surface_set_focus(surface, has_focus);
+}
+```
+
+### ghostty_surface_set_occlusion
+
+Sets whether the surface is occluded (hidden by other windows).
+
+```c
+void ghostty_surface_set_occlusion(
+    ghostty_surface_t surface,
+    bool occluded
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface.
+</ParamField>
+
+<ParamField path="occluded" type="bool" required>
+  Whether the surface is occluded.
+</ParamField>
+
+This can be used to reduce CPU/GPU usage when the terminal is not visible.
+
+### ghostty_surface_set_color_scheme
+
+Sets the color scheme preference.
+
+```c
+void ghostty_surface_set_color_scheme(
+    ghostty_surface_t surface,
+    ghostty_color_scheme_e scheme
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface.
+</ParamField>
+
+<ParamField path="scheme" type="ghostty_color_scheme_e" required>
+  Color scheme (light or dark).
+</ParamField>
+
+**Example:**
+```c
+void on_system_theme_change(bool is_dark) {
+    ghostty_surface_set_color_scheme(
+        surface,
+        is_dark ? GHOSTTY_COLOR_SCHEME_DARK : GHOSTTY_COLOR_SCHEME_LIGHT
+    );
+}
+```
+
+## Configuration
+
+### ghostty_surface_update_config
+
+Updates the surface configuration.
+
+```c
+void ghostty_surface_update_config(
+    ghostty_surface_t surface,
+    ghostty_config_t config
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface to update.
+</ParamField>
+
+<ParamField path="config" type="ghostty_config_t" required>
+  New configuration to apply.
+</ParamField>
+
+This allows hot-reloading configuration without recreating the surface.
+
+## Surface Queries
+
+### ghostty_surface_userdata
+
+Gets the user data pointer associated with the surface.
+
+```c
+void* ghostty_surface_userdata(ghostty_surface_t surface);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface.
+</ParamField>
+
+**Returns:** The userdata pointer from `ghostty_surface_config_s`.
+
+### ghostty_surface_app
+
+Gets the app that owns the surface.
+
+```c
+ghostty_app_t ghostty_surface_app(ghostty_surface_t surface);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface.
+</ParamField>
+
+**Returns:** The parent app instance.
+
+### ghostty_surface_needs_confirm_quit
+
+Checks if the surface needs confirmation before closing.
+
+```c
+bool ghostty_surface_needs_confirm_quit(ghostty_surface_t surface);
+```
+
+**Returns:** `true` if there's a running process that would be terminated.
+
+### ghostty_surface_process_exited
+
+Checks if the surface's shell process has exited.
+
+```c
+bool ghostty_surface_process_exited(ghostty_surface_t surface);
+```
+
+**Returns:** `true` if the process has exited.
+
+## Platform-Specific (macOS)
+
+<Tabs>
+  <Tab title="macOS">
+    ### ghostty_surface_set_display_id
+    
+    Sets the display ID for the surface (for proper font rendering).
+    
+    ```c
+    void ghostty_surface_set_display_id(
+        ghostty_surface_t surface,
+        uint32_t display_id
+    );
+    ```
+    
+    ### ghostty_surface_quicklook_font
+    
+    Gets the CTFont for QuickLook integration.
+    
+    ```c
+    void* ghostty_surface_quicklook_font(ghostty_surface_t surface);
+    ```
+    
+    **Returns:** A CTFontRef (cast to `void*`).
+    
+    ### ghostty_surface_quicklook_word
+    
+    Gets the word under the cursor for QuickLook.
+    
+    ```c
+    bool ghostty_surface_quicklook_word(
+        ghostty_surface_t surface,
+        ghostty_text_s* text
+    );
+    ```
+  </Tab>
+</Tabs>
+
+## Text Selection
+
+### ghostty_surface_has_selection
+
+Checks if the surface has an active selection.
+
+```c
+bool ghostty_surface_has_selection(ghostty_surface_t surface);
+```
+
+**Returns:** `true` if text is selected.
+
+### ghostty_surface_read_selection
+
+Reads the currently selected text.
+
+```c
+bool ghostty_surface_read_selection(
+    ghostty_surface_t surface,
+    ghostty_text_s* text
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface.
+</ParamField>
+
+<ParamField path="text" type="ghostty_text_s*" required>
+  Pointer to store the selected text.
+</ParamField>
+
+**Returns:** `true` if text was read successfully.
+
+Must free with `ghostty_surface_free_text()`.
+
+### ghostty_surface_read_text
+
+Reads text from a specific region.
+
+```c
+bool ghostty_surface_read_text(
+    ghostty_surface_t surface,
+    ghostty_selection_s selection,
+    ghostty_text_s* text
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface.
+</ParamField>
+
+<ParamField path="selection" type="ghostty_selection_s" required>
+  The region to read.
+</ParamField>
+
+<ParamField path="text" type="ghostty_text_s*" required>
+  Pointer to store the text.
+</ParamField>
+
+**Returns:** `true` if text was read successfully.
+
+### ghostty_surface_free_text
+
+Frees text returned by read functions.
+
+```c
+void ghostty_surface_free_text(
+    ghostty_surface_t surface,
+    ghostty_text_s* text
+);
+```
+
+## Surface Actions
+
+### ghostty_surface_binding_action
+
+Executes a binding action by name.
+
+```c
+bool ghostty_surface_binding_action(
+    ghostty_surface_t surface,
+    const char* action,
+    uintptr_t len
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface.
+</ParamField>
+
+<ParamField path="action" type="const char*" required>
+  Action name.
+</ParamField>
+
+<ParamField path="len" type="uintptr_t" required>
+  Length of action string.
+</ParamField>
+
+**Returns:** `true` if the action was executed.
+
+**Example:**
+```c
+// Programmatically trigger copy
+ghostty_surface_binding_action(surface, "copy_to_clipboard", 18);
+```
+
+### ghostty_surface_request_close
+
+Requests the surface to close.
+
+```c
+void ghostty_surface_request_close(ghostty_surface_t surface);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface to close.
+</ParamField>
+
+This will trigger the `close_surface_cb` callback.
+
+## Split Management
+
+### ghostty_surface_split
+
+Splits the surface in a direction.
+
+```c
+void ghostty_surface_split(
+    ghostty_surface_t surface,
+    ghostty_action_split_direction_e direction
+);
+```
+
+<ParamField path="surface" type="ghostty_surface_t" required>
+  The surface to split.
+</ParamField>
+
+<ParamField path="direction" type="ghostty_action_split_direction_e" required>
+  Split direction (right, down, left, up).
+</ParamField>
+
+### ghostty_surface_split_focus
+
+Moves focus to an adjacent split.
+
+```c
+void ghostty_surface_split_focus(
+    ghostty_surface_t surface,
+    ghostty_action_goto_split_e direction
+);
+```
+
+### ghostty_surface_split_resize
+
+Resizes a split pane.
+
+```c
+void ghostty_surface_split_resize(
+    ghostty_surface_t surface,
+    ghostty_action_resize_split_direction_e direction,
+    uint16_t amount
+);
+```
+
+### ghostty_surface_split_equalize
+
+Equalizes split pane sizes.
+
+```c
+void ghostty_surface_split_equalize(ghostty_surface_t surface);
+```
+
+## Complete Rendering Example
+
+```c
+#include <ghostty.h>
+
+typedef struct {
+    ghostty_app_t app;
+    ghostty_surface_t surface;
+    void* native_view;
+} TerminalContext;
+
+// Initialize
+TerminalContext* init_terminal(void* native_view) {
+    TerminalContext* ctx = malloc(sizeof(TerminalContext));
+    
+    // Create app
+    ghostty_config_t config = ghostty_config_new();
+    ghostty_config_load_default_files(config);
+    ghostty_config_finalize(config);
+    
+    ghostty_runtime_config_s runtime = {
+        .userdata = ctx,
+        .wakeup_cb = wakeup_cb,
+        .action_cb = action_cb,
+        // ... other callbacks
+    };
+    
+    ctx->app = ghostty_app_new(&runtime, config);
+    ghostty_config_free(config);
+    
+    // Create surface
+    ghostty_surface_config_s surf_config = ghostty_surface_config_new();
+    surf_config.platform_tag = GHOSTTY_PLATFORM_MACOS;
+    surf_config.platform.macos.nsview = native_view;
+    surf_config.scale_factor = get_scale_factor(native_view);
+    surf_config.userdata = ctx;
+    
+    ctx->surface = ghostty_surface_new(ctx->app, &surf_config);
+    ctx->native_view = native_view;
+    
+    // Set initial size
+    ghostty_surface_set_size(ctx->surface, 800, 600);
+    
+    return ctx;
+}
+
+// Render loop
+void render_frame(TerminalContext* ctx) {
+    // Process events and timers
+    ghostty_app_tick(ctx->app);
+    
+    // Draw terminal
+    ghostty_surface_draw(ctx->surface);
+}
+
+// Handle resize
+void on_resize(TerminalContext* ctx, uint32_t width, uint32_t height) {
+    ghostty_surface_set_size(ctx->surface, width, height);
+    render_frame(ctx);
+}
+
+// Handle display change
+void on_display_change(TerminalContext* ctx, double scale) {
+    ghostty_surface_set_content_scale(ctx->surface, scale, scale);
+}
+
+// Handle focus change
+void on_focus_change(TerminalContext* ctx, bool focused) {
+    ghostty_surface_set_focus(ctx->surface, focused);
+}
+
+// Cleanup
+void cleanup_terminal(TerminalContext* ctx) {
+    ghostty_surface_free(ctx->surface);
+    ghostty_app_free(ctx->app);
+    free(ctx);
+}
+```
+
+## See Also
+
+- [Core Types](/api/core-types) - Surface configuration types
+- [Input Handling](/api/input) - Handling user input
+- [Embedding Guide](/api/embedding) - Complete embedding tutorial

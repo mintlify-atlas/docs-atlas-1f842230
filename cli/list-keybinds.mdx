@@ -1,0 +1,169 @@
+---
+title: list-keybinds
+description: Display all configured or default keybindings
+---
+
+The `list-keybinds` command displays all keybindings for Ghostty, either from your configuration or the default keybindings.
+
+## Usage
+
+```bash
+ghostty +list-keybinds [options]
+```
+
+## Description
+
+When executed without arguments, this command lists the current keybindings loaded from your config file. If no config file is found or there are no keybinding changes, it displays the default Ghostty keybindings.
+
+When output to a TTY, the command provides formatted, colorized output. When piped to another command or when `--plain` is specified, it outputs in a format suitable for Unix tooling.
+
+## Options
+
+<ParamField path="--default" type="boolean">
+  Print the default keybindings instead of loading from the config file. Useful for seeing what the base keybindings are before customization.
+</ParamField>
+
+<ParamField path="--docs" type="boolean">
+  Print documentation about the action associated with each keybinding.
+  
+  <Note>This option is currently not fully implemented and may not display additional information.</Note>
+</ParamField>
+
+<ParamField path="--plain" type="boolean">
+  Disable formatting and colorization even when outputting to a TTY. Makes the output more friendly for Unix tooling like grep, awk, etc.
+</ParamField>
+
+<ParamField path="-h, --help" type="flag">
+  Display help information for this command.
+</ParamField>
+
+## Output Format
+
+The formatted output (TTY mode) displays keybindings with:
+
+- Color-coded modifiers (Super, Ctrl, Alt, Shift)
+- Chord sequences shown with `>` separator
+- Key tables prefixed before the keybinding
+- Actions with arguments highlighted differently
+- Sorted by binding complexity (chords, modifiers, tables)
+
+## Examples
+
+### Display Current Keybindings
+
+```bash
+ghostty +list-keybinds
+```
+
+<CodeGroup>
+```text Output (formatted)
+super + ctrl  + shift + d     reload_config
+super + shift + ⏎              new_window
+super + t                      new_tab
+super + w                      close_surface
+super + n                      new_window
+super + q                      quit
+ctrl  + shift + c              copy_to_clipboard
+ctrl  + shift + v              paste_from_clipboard
+super + k                      clear_screen
+...
+```
+</CodeGroup>
+
+### Display Default Keybindings
+
+```bash
+ghostty +list-keybinds --default
+```
+
+Shows the built-in keybindings before any user configuration.
+
+### Plain Output for Scripting
+
+```bash
+ghostty +list-keybinds --plain
+```
+
+<CodeGroup>
+```text Output
+keybind = super+ctrl+shift+d=reload_config
+keybind = super+shift+enter=new_window
+keybind = super+t=new_tab
+keybind = super+w=close_surface
+keybind = super+n=new_window
+keybind = super+q=quit
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+...
+```
+</CodeGroup>
+
+### Find Specific Keybinding
+
+```bash
+ghostty +list-keybinds --plain | grep "copy"
+```
+
+<CodeGroup>
+```text Output
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = super+c=copy_to_clipboard
+```
+</CodeGroup>
+
+### Display with Documentation
+
+```bash
+ghostty +list-keybinds --docs
+```
+
+Attempts to show documentation for each action (feature may be limited).
+
+### Count Total Keybindings
+
+```bash
+ghostty +list-keybinds --plain | wc -l
+```
+
+## Understanding the Output
+
+### Chord Sequences
+
+When you see `>` between keys, it indicates a chord (leader key sequence):
+
+```text
+super + k  >  super + n     new_window
+```
+
+This means press `super+k`, release, then press `super+n` to trigger the action.
+
+### Key Tables
+
+Key tables are prefixed before the binding:
+
+```text
+vi-normal/j     move_down
+vi-normal/k     move_up
+```
+
+These bindings are only active when the `vi-normal` key table is active.
+
+### Modifiers
+
+Modifiers are shown in order: `super`, `ctrl`, `alt`, `shift`
+
+## Notes
+
+<Note>
+  The keybinding display order prioritizes more complex bindings first: longer chords, more modifiers, then alphabetically by modifier and key.
+</Note>
+
+<Note>
+  Bindings in key tables are grouped together at the end of the output, sorted by table name.
+</Note>
+
+## See Also
+
+- [list-actions](/cli/list-actions) - List all available actions for keybindings
+- [Keybinding Configuration](/config/keybinds)
+- [show-config](/cli/show-config)

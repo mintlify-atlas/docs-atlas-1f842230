@@ -1,0 +1,168 @@
+---
+title: list-themes
+description: Preview or list all available themes for Ghostty
+---
+
+The `list-themes` command displays or previews all available themes for Ghostty, with an interactive TUI when run from a terminal.
+
+## Usage
+
+```bash
+ghostty +list-themes [options]
+```
+
+## Description
+
+When run from a TTY, this command launches an interactive TUI that allows you to preview themes with live color palettes and examples. When output is piped or `--plain` is specified, it outputs a simple list of theme names.
+
+Ghostty searches for themes in two directories:
+
+1. **User themes directory**: `$XDG_CONFIG_HOME/ghostty/themes` or `~/.config/ghostty/themes`
+2. **System themes directory**: Ghostty's resources directory (shipped themes)
+   - macOS: `Ghostty.app/Contents/Resources/ghostty/themes`
+   - Linux: `share/ghostty/themes` (installation-dependent)
+   - From source: `zig-out/share/ghostty/themes`
+
+You can override the resources directory with the `GHOSTTY_RESOURCES_DIR` environment variable.
+
+## Options
+
+<ParamField path="--path" type="boolean">
+  Show the full path to each theme file alongside the theme name.
+</ParamField>
+
+<ParamField path="--plain" type="boolean">
+  Force plain listing mode even when running in a TTY. Disables the interactive TUI preview.
+</ParamField>
+
+<ParamField path="--color" type="string" default="all">
+  Specify the color scheme of themes to include in the list:
+  - `all` - Show all themes (default)
+  - `dark` - Show only dark themes
+  - `light` - Show only light themes
+</ParamField>
+
+<ParamField path="-h, --help" type="flag">
+  Display help information for this command.
+</ParamField>
+
+## Interactive TUI Keys
+
+When running in interactive mode (TTY), use these keys:
+
+<CodeGroup>
+```text Navigation
+j, ↓, +          Move down 1 theme
+k, ↑, -          Move up 1 theme
+ScrollDown       Move down 1 theme
+ScrollUp         Move up 1 theme
+PgDown           Move down 20 themes
+PgUp             Move up 20 themes
+Home             Go to start of list
+End              Go to end of list
+```
+
+```text Actions
+/                Start search
+Esc, ⏎           Close search/save window
+^X, ^/           Clear search
+f                Cycle theme filters (all/dark/light)
+c                Copy theme name to clipboard
+C                Copy theme path to clipboard
+⏎                Show save instructions
+w                Write theme to auto config file
+```
+
+```text Display
+h, x             Show palette numbers in hexadecimal
+d                Show palette numbers in decimal
+F1, ?, ^H        Toggle help window
+q, Esc, ^C       Quit
+```
+</CodeGroup>
+
+## Examples
+
+### Launch Interactive Preview
+
+```bash
+ghostty +list-themes
+```
+
+Opens the interactive TUI with theme previews, color palettes, and navigation.
+
+### List All Themes (Plain)
+
+```bash
+ghostty +list-themes --plain
+```
+
+<CodeGroup>
+```text Output
+3024-day (builtin)
+3024-night (builtin)
+aesthetic (builtin)
+afternoon (builtin)
+alien-blood (builtin)
+alucard (builtin)
+argonaut (builtin)
+atom (builtin)
+...
+```
+</CodeGroup>
+
+### List with Paths
+
+```bash
+ghostty +list-themes --path --plain
+```
+
+<CodeGroup>
+```text Output
+3024-day (builtin) /usr/share/ghostty/themes/3024-day
+3024-night (builtin) /usr/share/ghostty/themes/3024-night
+custom-theme (user) /home/user/.config/ghostty/themes/custom-theme
+```
+</CodeGroup>
+
+### List Only Dark Themes
+
+```bash
+ghostty +list-themes --color=dark --plain
+```
+
+Filters to show only themes designed for dark mode.
+
+### Pipe to Grep
+
+```bash
+ghostty +list-themes --plain | grep -i nord
+```
+
+Find themes matching "nord" in the name.
+
+## Applying Themes
+
+To apply a theme from the preview:
+
+1. Navigate to the desired theme
+2. Press `⏎` to view save instructions
+3. Either:
+   - Press `w` to write to `auto/theme.ghostty` and add `config-file = ?auto/theme.ghostty` to your main config
+   - Manually add `theme = <theme-name>` to your config file
+
+## Notes
+
+<Note>
+  The TUI preview shows the actual color palette, foreground/background colors, and example terminal output with syntax highlighting to help you see how the theme looks in practice.
+</Note>
+
+<Note>
+  User themes in your config directory take precedence over built-in themes with the same name.
+</Note>
+
+## See Also
+
+- [Theme Configuration](/config/themes)
+- [list-fonts](/cli/list-fonts)
+- [show-config](/cli/show-config)

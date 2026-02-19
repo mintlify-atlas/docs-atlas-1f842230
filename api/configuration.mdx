@@ -1,0 +1,470 @@
+---
+title: Configuration API
+description: Configuration management functions for libghostty
+---
+
+# Configuration API
+
+The libghostty configuration API provides functions for creating, loading, and managing terminal configuration.
+
+## Creating Configuration
+
+### ghostty_config_new
+
+Creates a new configuration object with default values.
+
+```c
+ghostty_config_t ghostty_config_new();
+```
+
+**Returns:** A new configuration object that must be freed with `ghostty_config_free()`.
+
+**Example:**
+```c
+ghostty_config_t config = ghostty_config_new();
+if (!config) {
+    fprintf(stderr, "Failed to create config\n");
+    return 1;
+}
+```
+
+### ghostty_config_free
+
+Frees a configuration object.
+
+```c
+void ghostty_config_free(ghostty_config_t config);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to free.
+</ParamField>
+
+**Example:**
+```c
+ghostty_config_free(config);
+```
+
+### ghostty_config_clone
+
+Creates a deep copy of a configuration object.
+
+```c
+ghostty_config_t ghostty_config_clone(ghostty_config_t config);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration to clone.
+</ParamField>
+
+**Returns:** A new configuration object with the same settings.
+
+**Example:**
+```c
+ghostty_config_t cloned = ghostty_config_clone(original_config);
+// Modify cloned config without affecting original
+```
+
+## Loading Configuration
+
+### ghostty_config_load_default_files
+
+Loads configuration from default file locations.
+
+```c
+void ghostty_config_load_default_files(ghostty_config_t config);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to load into.
+</ParamField>
+
+Searches for configuration files in these locations (in order):
+1. `$XDG_CONFIG_HOME/ghostty/config` (or `~/.config/ghostty/config` if `XDG_CONFIG_HOME` is not set)
+2. Platform-specific locations
+
+**Example:**
+```c
+ghostty_config_t config = ghostty_config_new();
+ghostty_config_load_default_files(config);
+```
+
+### ghostty_config_load_file
+
+Loads configuration from a specific file.
+
+```c
+void ghostty_config_load_file(ghostty_config_t config, const char* path);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to load into.
+</ParamField>
+
+<ParamField path="path" type="const char*" required>
+  Path to the configuration file.
+</ParamField>
+
+**Example:**
+```c
+ghostty_config_t config = ghostty_config_new();
+ghostty_config_load_file(config, "/path/to/custom/config");
+```
+
+### ghostty_config_load_cli_args
+
+Loads configuration from command-line arguments.
+
+```c
+void ghostty_config_load_cli_args(ghostty_config_t config);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to load into.
+</ParamField>
+
+Parses command-line arguments passed to `ghostty_init()` and applies them to the configuration.
+
+**Example:**
+```c
+// Command line: ./app --font-size=14 --theme=nord
+ghostty_config_t config = ghostty_config_new();
+ghostty_config_load_cli_args(config);
+```
+
+### ghostty_config_load_recursive_files
+
+Loads configuration from files recursively (e.g., imports).
+
+```c
+void ghostty_config_load_recursive_files(ghostty_config_t config);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to load into.
+</ParamField>
+
+Processes any `import` directives in the configuration files.
+
+### ghostty_config_finalize
+
+Finalizes the configuration, applying defaults and validating settings.
+
+```c
+void ghostty_config_finalize(ghostty_config_t config);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to finalize.
+</ParamField>
+
+<Warning>
+  You must call this function after loading all configuration sources and before using the configuration.
+</Warning>
+
+**Example:**
+```c
+ghostty_config_t config = ghostty_config_new();
+ghostty_config_load_default_files(config);
+ghostty_config_load_cli_args(config);
+ghostty_config_finalize(config);  // Required!
+```
+
+## Querying Configuration
+
+### ghostty_config_get
+
+Retrieves a configuration value by key.
+
+```c
+bool ghostty_config_get(
+    ghostty_config_t config,
+    void* result,
+    const char* key,
+    uintptr_t key_len
+);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to query.
+</ParamField>
+
+<ParamField path="result" type="void*" required>
+  Pointer to store the result. The type depends on the configuration key.
+</ParamField>
+
+<ParamField path="key" type="const char*" required>
+  The configuration key name.
+</ParamField>
+
+<ParamField path="key_len" type="uintptr_t" required>
+  Length of the key string.
+</ParamField>
+
+**Returns:** `true` if the key exists and was retrieved successfully, `false` otherwise.
+
+**Example:**
+```c
+float font_size;
+if (ghostty_config_get(config, &font_size, "font-size", 9)) {
+    printf("Font size: %.1f\n", font_size);
+}
+
+ghostty_config_color_s bg_color;
+if (ghostty_config_get(config, &bg_color, "background", 10)) {
+    printf("Background: #%02x%02x%02x\n", bg_color.r, bg_color.g, bg_color.b);
+}
+```
+
+### ghostty_config_trigger
+
+Retrieves the trigger (keybinding) for an action.
+
+```c
+ghostty_input_trigger_s ghostty_config_trigger(
+    ghostty_config_t config,
+    const char* action,
+    uintptr_t action_len
+);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to query.
+</ParamField>
+
+<ParamField path="action" type="const char*" required>
+  The action name.
+</ParamField>
+
+<ParamField path="action_len" type="uintptr_t" required>
+  Length of the action string.
+</ParamField>
+
+**Returns:** The input trigger for the action.
+
+**Example:**
+```c
+ghostty_input_trigger_s trigger = ghostty_config_trigger(
+    config,
+    "new_window",
+    10
+);
+```
+
+## Diagnostics
+
+### ghostty_config_diagnostics_count
+
+Returns the number of configuration diagnostics (errors/warnings).
+
+```c
+uint32_t ghostty_config_diagnostics_count(ghostty_config_t config);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to check.
+</ParamField>
+
+**Returns:** Number of diagnostics.
+
+### ghostty_config_get_diagnostic
+
+Retrieves a diagnostic message by index.
+
+```c
+ghostty_diagnostic_s ghostty_config_get_diagnostic(
+    ghostty_config_t config,
+    uint32_t index
+);
+```
+
+<ParamField path="config" type="ghostty_config_t" required>
+  The configuration object to query.
+</ParamField>
+
+<ParamField path="index" type="uint32_t" required>
+  Index of the diagnostic (0-based).
+</ParamField>
+
+**Returns:** The diagnostic message.
+
+**Example:**
+```c
+uint32_t count = ghostty_config_diagnostics_count(config);
+for (uint32_t i = 0; i < count; i++) {
+    ghostty_diagnostic_s diag = ghostty_config_get_diagnostic(config, i);
+    fprintf(stderr, "Config error: %s\n", diag.message);
+}
+```
+
+## Utilities
+
+### ghostty_config_open_path
+
+Returns the path to the configuration file that would be opened.
+
+```c
+ghostty_string_s ghostty_config_open_path(void);
+```
+
+**Returns:** A string containing the configuration file path. Must be freed with `ghostty_string_free()`.
+
+**Example:**
+```c
+ghostty_string_s path = ghostty_config_open_path();
+if (path.ptr) {
+    printf("Config file: %.*s\n", (int)path.len, path.ptr);
+    ghostty_string_free(path);
+}
+```
+
+## Configuration Types
+
+### ghostty_config_color_list_s
+
+A list of colors.
+
+```c
+typedef struct {
+  const ghostty_config_color_s* colors;
+  size_t len;
+} ghostty_config_color_list_s;
+```
+
+<ResponseField name="colors" type="const ghostty_config_color_s*">
+  Pointer to array of colors.
+</ResponseField>
+
+<ResponseField name="len" type="size_t">
+  Number of colors in the array.
+</ResponseField>
+
+### ghostty_config_palette_s
+
+A 256-color palette.
+
+```c
+typedef struct {
+  ghostty_config_color_s colors[256];
+} ghostty_config_palette_s;
+```
+
+<ResponseField name="colors" type="ghostty_config_color_s[256]">
+  Array of 256 colors (standard terminal color palette).
+</ResponseField>
+
+### ghostty_config_command_list_s
+
+A list of commands.
+
+```c
+typedef struct {
+  const ghostty_command_s* commands;
+  size_t len;
+} ghostty_config_command_list_s;
+```
+
+### ghostty_quick_terminal_size_tag_e
+
+Quick terminal size specification type.
+
+```c
+typedef enum {
+  GHOSTTY_QUICK_TERMINAL_SIZE_NONE,
+  GHOSTTY_QUICK_TERMINAL_SIZE_PERCENTAGE,
+  GHOSTTY_QUICK_TERMINAL_SIZE_PIXELS,
+} ghostty_quick_terminal_size_tag_e;
+```
+
+### ghostty_quick_terminal_size_s
+
+Quick terminal size specification.
+
+```c
+typedef struct {
+  ghostty_quick_terminal_size_tag_e tag;
+  ghostty_quick_terminal_size_value_u value;
+} ghostty_quick_terminal_size_s;
+```
+
+### ghostty_config_quick_terminal_size_s
+
+Quick terminal size configuration.
+
+```c
+typedef struct {
+  ghostty_quick_terminal_size_s primary;
+  ghostty_quick_terminal_size_s secondary;
+} ghostty_config_quick_terminal_size_s;
+```
+
+<ResponseField name="primary" type="ghostty_quick_terminal_size_s">
+  Primary dimension (width for horizontal, height for vertical).
+</ResponseField>
+
+<ResponseField name="secondary" type="ghostty_quick_terminal_size_s">
+  Secondary dimension (height for horizontal, width for vertical).
+</ResponseField>
+
+## Complete Example
+
+```c
+#include <ghostty.h>
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    // Initialize
+    if (ghostty_init(argc, (char**)argv) != GHOSTTY_SUCCESS) {
+        return 1;
+    }
+    
+    // Create config
+    ghostty_config_t config = ghostty_config_new();
+    
+    // Load from default locations
+    ghostty_config_load_default_files(config);
+    
+    // Load CLI args (can override file settings)
+    ghostty_config_load_cli_args(config);
+    
+    // Process imports
+    ghostty_config_load_recursive_files(config);
+    
+    // Finalize (required)
+    ghostty_config_finalize(config);
+    
+    // Check for errors
+    uint32_t diag_count = ghostty_config_diagnostics_count(config);
+    if (diag_count > 0) {
+        fprintf(stderr, "Configuration errors:\n");
+        for (uint32_t i = 0; i < diag_count; i++) {
+            ghostty_diagnostic_s diag = ghostty_config_get_diagnostic(config, i);
+            fprintf(stderr, "  - %s\n", diag.message);
+        }
+    }
+    
+    // Query configuration values
+    float font_size;
+    if (ghostty_config_get(config, &font_size, "font-size", 9)) {
+        printf("Font size: %.1f\n", font_size);
+    }
+    
+    ghostty_config_color_s bg_color;
+    if (ghostty_config_get(config, &bg_color, "background", 10)) {
+        printf("Background color: #%02x%02x%02x\n",
+               bg_color.r, bg_color.g, bg_color.b);
+    }
+    
+    // Use config to create app...
+    
+    // Cleanup
+    ghostty_config_free(config);
+    
+    return 0;
+}
+```
+
+## See Also
+
+- [Core Types](/api/core-types) - Configuration-related types
+- [Ghostty Configuration](/docs/config/reference) - Available configuration options

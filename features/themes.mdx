@@ -1,0 +1,240 @@
+---
+title: Themes
+description: Customize Ghostty's appearance with built-in and custom themes
+---
+
+Ghostty supports a powerful theming system that allows you to customize colors and appearance. You can use built-in themes, create custom themes, or define colors directly in your configuration.
+
+## Using Built-in Themes
+
+Ghostty ships with many built-in themes. To see all available themes:
+
+```bash
+ghostty +list-themes
+```
+
+### Setting a Theme
+
+Add the `theme` configuration to your config file:
+
+```ini
+theme = Rose Pine
+```
+
+Themes are searched in two locations:
+1. Your configuration directory: `~/.config/ghostty/themes/`
+2. Ghostty's resource directory (built-in themes)
+
+### Light and Dark Mode Themes
+
+You can specify different themes for light and dark mode:
+
+```ini
+theme = light:Rose Pine Dawn,dark:Rose Pine
+```
+
+Both light and dark must be specified in this format. The theme will automatically switch based on your desktop environment's appearance setting.
+
+<Note>
+  Whitespace around theme names is trimmed, and the order of light/dark doesn't matter.
+</Note>
+
+## Custom Themes
+
+### Creating a Custom Theme
+
+<Steps>
+  <Step title="Create the themes directory">
+    ```bash
+    mkdir -p ~/.config/ghostty/themes
+    ```
+  </Step>
+
+  <Step title="Create your theme file">
+    Theme files use the same syntax as Ghostty's main configuration file:
+    
+    ```ini ~/.config/ghostty/themes/my-theme
+    # Basic colors
+    background = #1a1b26
+    foreground = #c0caf5
+    
+    # Cursor colors
+    cursor-color = #c0caf5
+    cursor-text = #1a1b26
+    
+    # Selection colors
+    selection-foreground = #c0caf5
+    selection-background = #33467c
+    
+    # Palette (0-15: ANSI colors)
+    palette = 0=#15161e
+    palette = 1=#f7768e
+    palette = 2=#9ece6a
+    palette = 3=#e0af68
+    palette = 4=#7aa2f7
+    palette = 5=#bb9af7
+    palette = 6=#7dcfff
+    palette = 7=#a9b1d6
+    palette = 8=#414868
+    palette = 9=#f7768e
+    palette = 10=#9ece6a
+    palette = 11=#e0af68
+    palette = 12=#7aa2f7
+    palette = 13=#bb9af7
+    palette = 14=#7dcfff
+    palette = 15=#c0caf5
+    ```
+  </Step>
+
+  <Step title="Apply your theme">
+    ```ini ~/.config/ghostty/config
+    theme = my-theme
+    ```
+  </Step>
+</Steps>
+
+### Using Absolute Paths
+
+You can also reference a theme file with an absolute path:
+
+```ini
+theme = /path/to/my-theme-file
+```
+
+<Warning>
+  Theme files can set any configuration option. Only use themes from trusted sources.
+</Warning>
+
+## Color Configuration
+
+### Basic Colors
+
+Colors can be specified as hex codes or named X11 colors:
+
+<CodeGroup>
+```ini Hex Colors
+background = #282C34
+foreground = #FFFFFF
+```
+
+```ini Named Colors
+background = black
+foreground = white
+```
+</CodeGroup>
+
+### The 256 Color Palette
+
+The palette configuration sets colors 0-255 for terminal applications:
+
+```ini
+# Format: palette = N=COLOR
+palette = 0=#000000   # Black
+palette = 1=#FF0000   # Red
+palette = 2=#00FF00   # Green
+palette = 3=#FFFF00   # Yellow
+palette = 4=#0000FF   # Blue
+palette = 5=#FF00FF   # Magenta
+palette = 6=#00FFFF   # Cyan
+palette = 7=#FFFFFF   # White
+```
+
+The index can be decimal, binary (`0b`), octal (`0o`), or hexadecimal (`0x`).
+
+### Automatic Palette Generation
+
+Since version 1.3.0, Ghostty can automatically generate the extended 256-color palette (indices 16-255) from your base 16 ANSI colors:
+
+```ini
+# Enable automatic palette generation (default: true)
+palette-generate = true
+```
+
+This allows theme authors to specify only the base 16 colors while maintaining a cohesive color scheme throughout the palette.
+
+## Advanced Color Features
+
+### Cursor Colors
+
+Customize the cursor and its text:
+
+```ini
+cursor-color = #FF0000
+cursor-text = #FFFFFF
+cursor-opacity = 1.0
+```
+
+You can also match cell colors:
+
+```ini
+cursor-color = cell-foreground
+cursor-text = cell-background
+```
+
+### Selection Colors
+
+```ini
+selection-foreground = #FFFFFF
+selection-background = #0000FF
+```
+
+Or match cell colors (available since 1.2.0):
+
+```ini
+selection-foreground = cell-foreground
+selection-background = cell-background
+```
+
+### Minimum Contrast
+
+Ensure text is always readable by setting a minimum contrast ratio:
+
+```ini
+# Value between 1 and 21 (WCAG 2.0 contrast ratio)
+minimum-contrast = 1.1   # Avoid invisible text
+# minimum-contrast = 3   # Good readability
+# minimum-contrast = 7   # WCAG AAA compliance
+```
+
+## Examples
+
+<CardGroup cols={2}>
+  <Card title="Dark Theme" icon="moon">
+    ```ini
+    theme = Tokyo Night
+    background-opacity = 0.95
+    ```
+  </Card>
+
+  <Card title="Light Theme" icon="sun">
+    ```ini
+    theme = Rose Pine Dawn
+    minimum-contrast = 3
+    ```
+  </Card>
+
+  <Card title="Auto-switching" icon="circle-half-stroke">
+    ```ini
+    theme = light:Github Light,dark:Github Dark
+    ```
+  </Card>
+
+  <Card title="Custom Colors" icon="palette">
+    ```ini
+    background = #1e1e2e
+    foreground = #cdd6f4
+    cursor-color = #f5e0dc
+    ```
+  </Card>
+</CardGroup>
+
+## Known Issues
+
+- **macOS**: Titlebar tab style is not updated when switching between light and dark themes
+- Theme overrides: Colors specified via `background`, `foreground`, `palette`, etc. will override theme colors
+
+## Related Configuration
+
+- [background-opacity](/config/appearance#background-opacity) - Set terminal transparency
+- [background-image](/config/appearance#background-image) - Add a background image
+- See the [color configuration reference](/config/colors) for all color options

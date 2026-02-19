@@ -1,0 +1,472 @@
+---
+title: Font Configuration
+description: Configure fonts, styles, and typography in Ghostty
+---
+
+## Font Families
+
+### Basic Font Setup
+
+```ini
+# Set primary font
+font-family = JetBrains Mono
+
+# Set font size (in points)
+font-size = 13
+```
+
+List available fonts:
+
+```bash
+ghostty +list-fonts
+```
+
+<Tip>
+On macOS, the default font size is 13pt. On other platforms, it's 12pt.
+</Tip>
+
+### Font Size Details
+
+```ini
+# Font size can be non-integer
+font-size = 13.5  # On 2x display: 13.5pt × 2px/pt = 27px
+```
+
+<Info>
+**Linux/GTK**: Font size is scaled by display-wide and text-specific scaling factors (e.g., GNOME display scale and large text settings).
+</Info>
+
+<Accordion title="Does reloading config update font size?">
+Reloading affects terminals that **haven't** manually adjusted their font size (via increase/decrease font size actions). Terminals with manual adjustments retain their size.
+</Accordion>
+
+## Font Fallbacks
+
+Specify multiple fonts for missing glyphs:
+
+```ini
+# Primary font
+font-family = JetBrains Mono
+
+# Fallback fonts (for symbols, emoji, etc.)
+font-family = Symbols Nerd Font
+font-family = Noto Color Emoji
+```
+
+<Note>
+Fallback fonts are used in order when glyphs are missing from the primary font.
+</Note>
+
+### Emoji Fonts
+
+<Tabs>
+  <Tab title="macOS">
+    Ghostty always uses Apple Color Emoji by default. Override by specifying an emoji font:
+    
+    ```ini
+    font-family = JetBrains Mono
+    font-family = MyEmojiFont
+    ```
+  </Tab>
+  <Tab title="Linux">
+    Ghostty always uses Noto Emoji by default. Override by specifying an emoji font:
+    
+    ```ini
+    font-family = JetBrains Mono
+    font-family = Noto Color Emoji
+    ```
+  </Tab>
+</Tabs>
+
+### Resetting Font List
+
+Clear previous fonts before setting new ones:
+
+```ini
+# In config file
+font-family = ""  # Clear previous fonts
+font-family = Fira Code
+```
+
+<Info>
+CLI arguments automatically clear config file fonts, so you don't need `--font-family=""` on the command line.
+</Info>
+
+## Font Styles
+
+### Style-Specific Fonts
+
+Set different fonts for bold, italic, and bold-italic:
+
+```ini
+font-family = JetBrains Mono
+font-family-bold = JetBrains Mono Bold
+font-family-italic = JetBrains Mono Italic
+font-family-bold-italic = JetBrains Mono Bold Italic
+```
+
+<Accordion title="What if I don't set style fonts?">
+Ghostty searches the regular font family for stylistic variants. If not found, it uses the regular style or synthesizes the style.
+</Accordion>
+
+<Accordion title="What if a style font can't be found?">
+If you specify `font-family-bold = FooBar` but FooBar doesn't exist, Ghostty falls back to the regular `font-family` for bold text.
+</Accordion>
+
+### Named Font Styles
+
+Use specific font style names:
+
+```ini
+font-style = Heavy           # Use "Heavy" style for regular
+font-style-bold = Black      # Use "Black" style for bold
+font-style-italic = Light Italic
+```
+
+<Note>
+Style names come from the font itself. For example, "Iosevka Heavy" has a style named "Heavy".
+</Note>
+
+### Disabling Font Styles
+
+Disable specific styles entirely:
+
+```ini
+# Disable bold completely
+font-style-bold = false
+
+# When programs request bold, regular font is used instead
+```
+
+<Tip>
+This only affects requested styles. If a font doesn't have the style, you don't need to disable it.
+</Tip>
+
+## Synthetic Styles
+
+Control synthetic (generated) font styles:
+
+```ini
+# Enable all synthetic styles (default)
+font-synthetic-style = true
+
+# Disable all synthetic styles
+font-synthetic-style = false
+
+# Disable specific styles
+font-synthetic-style = no-bold
+font-synthetic-style = no-italic
+font-synthetic-style = no-bold,no-italic
+```
+
+<Warning>
+**Important**: Disabling `bold` or `italic` does NOT disable `bold-italic`. To disable bold-italic, explicitly set:
+
+```ini
+font-synthetic-style = no-bold-italic
+```
+</Warning>
+
+<Accordion title="What are synthetic styles?">
+Ghostty can synthesize styles if the font lacks them:
+- **Bold**: Draws an outline around glyphs
+- **Italic**: Applies a slant to glyphs
+- **Bold-Italic**: Both outline and slant
+
+Synthetic styles don't look as good as native styles, but they provide styled text when unavailable.
+</Accordion>
+
+## Font Features
+
+Enable or disable OpenType font features:
+
+```ini
+# Enable features
+font-feature = liga  # Ligatures
+font-feature = +calt # Contextual alternates
+font-feature = ss01  # Stylistic set 01
+
+# Disable features
+font-feature = -calt # Disable ligatures
+font-feature = -liga
+
+# Set feature values
+font-feature = cv01=2  # Character variant 01, value 2
+```
+
+<Tip>
+To disable programming ligatures, use `-calt` (most common). To disable most ligatures: `-calt, -liga, -dlig`.
+</Tip>
+
+### Feature Syntax
+
+Multiple syntax forms are supported:
+
+```ini
+font-feature = calt        # Enable
+font-feature = +calt       # Enable
+font-feature = calt on     # Enable
+font-feature = calt=1      # Enable with value
+font-feature = -calt       # Disable
+font-feature = calt off    # Disable
+font-feature = calt=0      # Disable
+font-feature = "calt"      # Quoted (CSS-compatible)
+```
+
+<Accordion title="How do I find what features my font has?">
+Use a font inspection tool like [fontdrop.info](https://fontdrop.info) to explore available OpenType features.
+</Accordion>
+
+## Variable Fonts
+
+Configure variable font axes:
+
+```ini
+# Adjust weight axis
+font-variation = wght=500
+
+# Multiple axes
+font-variation = wght=500
+font-variation = slnt=-10
+
+# Style-specific variations
+font-variation-bold = wght=700
+font-variation-italic = slnt=-12
+font-variation-bold-italic = wght=700
+font-variation-bold-italic = slnt=-12
+```
+
+<Note>
+Variable fonts usually have filenames ending in `-VF.ttf` or `-VF.otf`.
+</Note>
+
+### Common Variable Font Axes
+
+| Axis | Description | Example |
+|------|-------------|----------|
+| `wght` | Weight | `wght=400` (regular) to `wght=700` (bold) |
+| `slnt` | Slant | `slnt=-10` (italic slant) |
+| `ital` | Italic | `ital=1` (italic on) |
+| `opsz` | Optical size | `opsz=12` (for 12pt display) |
+| `wdth` | Width | `wdth=100` (normal) to `wdth=125` (wide) |
+| `GRAD` | Gradient | Font-specific |
+
+<Accordion title="What happens with invalid variation values?">
+Invalid axis IDs or out-of-range values are usually ignored. Check your font's documentation for supported ranges.
+</Accordion>
+
+## Font Rendering
+
+### FreeType Options (Linux)
+
+Configure FreeType font rendering:
+
+```ini
+# Enable/disable features
+freetype-load-flags = hinting           # Enable hinting (default)
+freetype-load-flags = no-hinting        # Disable hinting
+freetype-load-flags = force-autohint    # Always use auto-hinter
+freetype-load-flags = light             # Light hinting (default)
+freetype-load-flags = monochrome        # 1-bit rendering (no anti-aliasing)
+```
+
+<Tabs>
+  <Tab title="Linux">
+    FreeType flags only affect Linux builds using FreeType for rendering.
+  </Tab>
+  <Tab title="macOS">
+    macOS uses CoreText and doesn't have equivalent configuration options.
+  </Tab>
+</Tabs>
+
+### Font Thickening (macOS)
+
+```ini
+# Enable font thickening
+font-thicken = true
+
+# Thicken strength (0-255)
+font-thicken-strength = 255  # Maximum
+font-thicken-strength = 128  # Medium
+font-thicken-strength = 0    # Lightest
+```
+
+<Note>
+Font thickening is currently only supported on macOS.
+</Note>
+
+## Font Metrics Adjustments
+
+Fine-tune font rendering metrics:
+
+```ini
+# Adjust cell dimensions
+adjust-cell-width = 1      # Add 1 pixel
+adjust-cell-width = 10%    # Add 10%
+adjust-cell-height = -5%   # Reduce by 5%
+
+# Adjust font baseline
+adjust-font-baseline = 2   # Move baseline up 2px
+
+# Adjust underline
+adjust-underline-position = 1    # Move underline down
+adjust-underline-thickness = 1   # Thicker underline
+
+# Adjust cursor
+adjust-cursor-thickness = 2      # Thicker cursor
+adjust-cursor-height = 10%       # Taller cursor
+```
+
+<Warning>
+Values can be integers (`1`, `-1`) or percentages (`20%`, `-15%`). They **modify** the original value, not replace it.
+
+Wrong values (e.g., `-100%`) can make the terminal unusable.
+</Warning>
+
+### Available Adjustments
+
+<Accordion title="Cell Adjustments">
+- `adjust-cell-width`: Horizontal cell size
+- `adjust-cell-height`: Vertical cell size (font is centered)
+
+**Note**: Powerline glyphs adjust with cell height to maintain alignment.
+</Accordion>
+
+<Accordion title="Line Decorations">
+- `adjust-underline-position`: Distance from top to underline
+- `adjust-underline-thickness`: Underline thickness
+- `adjust-strikethrough-position`: Distance from top to strikethrough
+- `adjust-strikethrough-thickness`: Strikethrough thickness
+- `adjust-overline-position`: Distance from top to overline
+- `adjust-overline-thickness`: Overline thickness
+</Accordion>
+
+<Accordion title="Other Adjustments">
+- `adjust-font-baseline`: Distance from bottom to baseline (increase = move up)
+- `adjust-cursor-thickness`: Bar and outlined rect cursor thickness
+- `adjust-cursor-height`: Cursor height (all types)
+- `adjust-box-thickness`: Box drawing character thickness
+- `adjust-icon-height`: Maximum height for Nerd Font icons (since 1.2.0)
+</Accordion>
+
+## Codepoint Mapping
+
+Force specific Unicode ranges to use specific fonts:
+
+```ini
+# Map a single codepoint
+font-codepoint-map = U+1F47B=Apple Color Emoji
+
+# Map a range
+font-codepoint-map = U+2500-U+257F=Symbols Nerd Font
+
+# Map multiple ranges
+font-codepoint-map = U+2500-U+257F,U+E0A0-U+E0A3=Symbols Nerd Font
+```
+
+<Info>
+Changing codepoint mapping at runtime only affects **new** terminals (new windows, tabs, etc.).
+</Info>
+
+<Accordion title="Why would I use codepoint mapping?">
+Useful for:
+- Special symbols that render better in specific fonts
+- Box drawing characters
+- Powerline symbols
+- Icon fonts (Nerd Fonts)
+- Emoji control
+</Accordion>
+
+## Font Shaping
+
+Control when font shaping runs are broken:
+
+```ini
+# Break shaping under the cursor (shows individual characters)
+font-shaping-break = cursor
+
+# Don't break shaping anywhere (keeps all ligatures)
+font-shaping-break = no-cursor
+```
+
+<Accordion title="What are shaping runs?">
+A "run" is contiguous text shaped together to form ligatures and other features. Breaking runs prevents ligatures from forming.
+
+Breaking under the cursor helps see individual characters during text editing.
+</Accordion>
+
+<Note>
+Font shaping break is available since version 1.2.0.
+</Note>
+
+## Grapheme Width
+
+Control how grapheme cluster width is calculated:
+
+```ini
+grapheme-width-method = unicode  # Unicode standard (default)
+grapheme-width-method = legacy   # Legacy wcswidth-like method
+```
+
+<Accordion title="Which method should I use?">
+- **unicode**: Correct width for emoji, non-English characters, etc. Some legacy programs may have cursor-desync issues.
+- **legacy**: Maximum compatibility with old programs. May display some graphemes incorrectly.
+
+If a program enables terminal mode 2027, unicode width is forced automatically.
+</Accordion>
+
+<Warning>
+This only affects **new** terminals. Existing terminals keep their current method after config reload.
+</Warning>
+
+## Font Examples
+
+### Minimal Setup
+
+```ini
+font-family = JetBrains Mono
+font-size = 13
+```
+
+### With Ligatures Disabled
+
+```ini
+font-family = Fira Code
+font-feature = -calt
+font-feature = -liga
+```
+
+### Variable Font Setup
+
+```ini
+font-family = Recursive
+font-variation = MONO=1
+font-variation = CASL=0
+font-variation-bold = wght=800
+```
+
+### Multi-Font Setup
+
+```ini
+font-family = JetBrains Mono
+font-family = Symbols Nerd Font Mono
+font-family = Noto Color Emoji
+font-size = 13
+```
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="List Fonts" icon="list" href="#font-families">
+    Run `ghostty +list-fonts` to see available fonts
+  </Card>
+  <Card title="Font Drop" icon="droplet" href="https://fontdrop.info">
+    Inspect OpenType features in your fonts
+  </Card>
+  <Card title="Nerd Fonts" icon="icons" href="https://www.nerdfonts.com">
+    Icon fonts for terminals
+  </Card>
+  <Card title="Google Fonts" icon="google" href="https://fonts.google.com">
+    Free font repository
+  </Card>
+</CardGroup>

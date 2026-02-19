@@ -1,0 +1,259 @@
+---
+title: Shell Integration
+description: Enhanced shell features with automatic prompt detection and command tracking
+---
+
+Ghostty's shell integration provides enhanced terminal features like semantic prompt detection, cursor shape control, and improved sudo/SSH workflows. Integration is automatic for supported shells.
+
+## Supported Shells
+
+Shell integration is available for:
+
+- **Bash** (requires Bash 4.0+, automatic integration requires standard Bash)
+- **Fish** (automatic)
+- **Zsh** (requires Zsh 5.1+, automatic)
+- **Elvish** (manual import required)
+- **Nushell** (automatic)
+
+## Features Provided
+
+<CardGroup cols={2}>
+  <Card title="Semantic Prompts" icon="terminal">
+    OSC 133 sequences mark prompts, commands, and output for better navigation and selection
+  </Card>
+  
+  <Card title="Cursor Control" icon="i-cursor">
+    Automatic cursor shape changes: bar at prompt, block during command execution
+  </Card>
+  
+  <Card title="Sudo Integration" icon="lock">
+    Automatically preserves terminfo when using sudo
+  </Card>
+  
+  <Card title="SSH Integration" icon="network-wired">
+    Copies terminfo to remote hosts for proper terminal behavior
+  </Card>
+</CardGroup>
+
+## Setup by Shell
+
+### Bash
+
+<Tabs>
+  <Tab title="Automatic (Standard Bash)">
+    Shell integration is automatic for standard Bash installations. Ghostty starts Bash in POSIX mode with the `ENV` environment variable set to load the integration script.
+    
+    No manual configuration needed.
+  </Tab>
+  
+  <Tab title="Manual (macOS /bin/bash)">
+    The Bash version distributed with macOS does not support automatic integration. Add this to the top of your `~/.bashrc`:
+    
+    ```bash
+    # Ghostty shell integration for Bash
+    if [ -n "${GHOSTTY_RESOURCES_DIR}" ]; then
+        builtin source "${GHOSTTY_RESOURCES_DIR}/shell-integration/bash/ghostty.bash"
+    fi
+    ```
+    
+    <Note>
+      You can also install a standard Bash version via Homebrew and set it as your default shell.
+    </Note>
+  </Tab>
+</Tabs>
+
+### Fish
+
+Automatic integration via `XDG_DATA_DIRS`. Ghostty prepends its shell integration directory, and Fish automatically loads configuration files from `<XDG_DATA_DIR>/fish/vendor_conf.d/*.fish` on startup.
+
+**No manual setup required.**
+
+### Zsh
+
+<Steps>
+  <Step title="Check if automatic integration works">
+    Automatic integration works by temporarily setting `ZDOTDIR` to Ghostty's integration directory.
+    
+    If your environment doesn't set `ZDOTDIR` in system-wide files like `/etc/zshenv`, automatic integration should work.
+  </Step>
+  
+  <Step title="Manual setup (if needed)">
+    If automatic integration doesn't work, add this to your `~/.zshrc`:
+    
+    ```zsh
+    if [[ -n $GHOSTTY_RESOURCES_DIR ]]; then
+      source "$GHOSTTY_RESOURCES_DIR"/shell-integration/zsh/ghostty-integration
+    fi
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  Requires Zsh 5.1 or later (released September 2015).
+</Note>
+
+### Elvish
+
+<Steps>
+  <Step title="Understand automatic module loading">
+    Ghostty prepends `$GHOSTTY_RESOURCES_DIR/src/shell-integration` to `XDG_DATA_DIRS`, making the `ghostty-integration` module available.
+  </Step>
+  
+  <Step title="Import the module">
+    Add to your `~/.config/elvish/rc.elv`:
+    
+    ```elvish
+    if (eq $E:TERM "xterm-ghostty") {
+      try { use ghostty-integration } catch { }
+    }
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  Elvish integration is community-supported. The Ghostty team distributes it but does not officially support it.
+</Warning>
+
+### Nushell
+
+Automatic integration using Nushell's vendor autoload mechanism. Ghostty automatically imports the module using the `-e "use ghostty *"` flag.
+
+**Manual loading (if shell integration is disabled):**
+
+```nushell
+source $GHOSTTY_RESOURCES_DIR/shell-integration/nushell/vendor/autoload/ghostty.nu
+use ghostty *
+```
+
+## Shell Integration Features
+
+### Controlling Features
+
+Customize which integration features are enabled:
+
+```ini ~/.config/ghostty/config
+# Disable specific features
+shell-integration-features = no-cursor
+
+# Enable only specific features
+shell-integration-features = sudo,title
+```
+
+Available features:
+- `cursor` - Automatic cursor shape changes
+- `sudo` - Terminfo preservation for sudo
+- `title` - Window title updates
+
+### Cursor Behavior
+
+With cursor integration enabled:
+- **At prompt**: Cursor becomes a bar (vertical line)
+- **During execution**: Cursor returns to default (usually block)
+
+Disable cursor integration if you prefer manual control:
+
+```ini
+shell-integration-features = no-cursor
+```
+
+### Sudo Integration Example
+
+The sudo feature wraps the `sudo` command to preserve `$TERMINFO`:
+
+```bash
+# Without integration:
+$ sudo vim
+# May have terminal compatibility issues
+
+# With integration:
+$ sudo vim  
+# Automatically preserves Ghostty terminfo
+```
+
+### SSH Integration
+
+The SSH features help copy terminfo to remote hosts:
+
+```bash
+# Terminfo is automatically copied when connecting
+ssh user@remote-host
+
+# On the remote host, Ghostty's terminfo is available
+```
+
+## Prompt Markers (OSC 133)
+
+Shell integration uses OSC 133 sequences to mark semantic regions:
+
+- **OSC 133 A**: Prompt start
+- **OSC 133 B**: Prompt end (command start)
+- **OSC 133 C**: Command execution start
+- **OSC 133 D**: Command end
+
+These markers enable features like:
+- Selecting entire command output
+- Scrolling between prompts
+- Visual prompt indicators
+
+## Environment Variables
+
+Shell integration sets these environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `GHOSTTY_RESOURCES_DIR` | Path to Ghostty's resource directory |
+| `GHOSTTY_SHELL_FEATURES` | Comma-separated list of enabled features |
+| `GHOSTTY_BIN_DIR` | Path to Ghostty binary directory |
+| `TERM` | Set to `xterm-ghostty` |
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Shell integration not loading">
+    Check if `$GHOSTTY_RESOURCES_DIR` is set:
+    
+    ```bash
+    echo $GHOSTTY_RESOURCES_DIR
+    ```
+    
+    If empty, you're not running in Ghostty or automatic integration failed. Use manual setup.
+  </Accordion>
+  
+  <Accordion title="Cursor shape not changing">
+    Ensure cursor integration is enabled:
+    
+    ```bash
+    echo $GHOSTTY_SHELL_FEATURES | grep cursor
+    ```
+    
+    Check your config doesn't have `shell-integration-features = no-cursor`.
+  </Accordion>
+  
+  <Accordion title="Sudo still has terminal issues">
+    Verify the sudo feature is enabled:
+    
+    ```bash
+    echo $GHOSTTY_SHELL_FEATURES | grep sudo
+    ```
+    
+    Ensure `$TERMINFO` is set:
+    
+    ```bash
+    echo $TERMINFO
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Disabling Shell Integration
+
+To completely disable shell integration:
+
+```ini ~/.config/ghostty/config
+shell-integration = false
+```
+
+## Related Resources
+
+- Shell integration source code: `~/workspace/source/src/shell-integration/`
+- [Kitty shell integration](https://sw.kovidgoyal.net/kitty/shell-integration/) (similar implementation)
+- [OSC 133 specification](https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md)

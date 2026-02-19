@@ -1,0 +1,440 @@
+---
+title: Migration Guide
+description: Migrate to Ghostty from other terminal emulators like iTerm2, Alacritty, Kitty, or Terminal.app
+---
+
+This guide helps you migrate to Ghostty from other popular terminal emulators. Ghostty is designed to be a drop-in replacement for your existing terminal while providing competitive performance, modern features, and native platform experiences.
+
+## Why Ghostty?
+
+Ghostty differentiates itself by providing all three of:
+- **Fast performance** - Competitive with the fastest terminal emulators
+- **Feature-rich** - Modern terminal features and UI capabilities
+- **Native** - True platform-native UIs (SwiftUI on macOS, GTK on Linux)
+
+Most terminal emulators force you to choose between these categories. Ghostty provides all three without compromise.
+
+## Quick Start for Migration
+
+<Steps>
+  <Step title="Install Ghostty">
+    See the [installation guide](/docs/install) for your platform.
+  </Step>
+  <Step title="Convert your config">
+    Use the sections below for your current terminal emulator to convert your configuration.
+  </Step>
+  <Step title="Set up shell integration">
+    ```bash
+    # Bash
+    echo 'eval "$(ghostty +shell-integration bash)"' >> ~/.bashrc
+
+    # Zsh  
+    echo 'eval "$(ghostty +shell-integration zsh)"' >> ~/.zshrc
+
+    # Fish
+    echo 'ghostty +shell-integration fish | source' >> ~/.config/fish/config.fish
+    ```
+  </Step>
+  <Step title="Set as default terminal">
+    Make Ghostty your default terminal in your system settings.
+  </Step>
+</Steps>
+
+## Migration from iTerm2
+
+<CardGroup cols={2}>
+  <Card title="iTerm2" icon="square-terminal">
+    Feature-rich macOS terminal with extensive customization
+  </Card>
+  <Card title="Ghostty" icon="ghost">
+    Native SwiftUI app with Metal renderer and modern features
+  </Card>
+</CardGroup>
+
+### Feature Comparison
+
+| Feature | iTerm2 | Ghostty |
+|---------|--------|----------|
+| Tabs | ✅ | ✅ |
+| Splits | ✅ | ✅ |
+| Profiles | ✅ | ✅ (via config files) |
+| Metal Rendering | ⚠️ (except with ligatures) | ✅ |
+| Ligatures | ✅ (CPU renderer) | ✅ (GPU accelerated) |
+| Shell Integration | ✅ | ✅ |
+| Triggers | ✅ | ⚠️ (limited) |
+| Themes | ✅ | ✅ |
+| True Color | ✅ | ✅ |
+| tmux Integration | ✅ | ➖ |
+
+### Configuration Migration
+
+iTerm2 uses a GUI preferences panel while Ghostty uses a text configuration file.
+
+**Config file location:**
+- iTerm2: `~/Library/Preferences/com.googlecode.iterm2.plist`
+- Ghostty: `~/.config/ghostty/config`
+
+**Common settings:**
+
+```
+# Font
+font-family = "SF Mono"
+font-size = 14
+
+# Colors (example)
+background = 000000
+foreground = ffffff
+
+# Window
+window-padding-x = 2
+window-padding-y = 2
+
+# Cursor
+cursor-style = block
+cursor-style-blink = true
+
+# Scrollback
+scrollback-limit = 10000
+
+# Shell
+shell-integration = true
+```
+
+### Keyboard Shortcuts
+
+iTerm2 and Ghostty have different default keybindings. Here are common mappings:
+
+```
+# Tabs
+keybind = cmd+t=new_tab
+keybind = cmd+w=close_tab
+keybind = cmd+shift+left_bracket=goto_tab:previous
+keybind = cmd+shift+right_bracket=goto_tab:next
+
+# Splits
+keybind = cmd+d=new_split:right
+keybind = cmd+shift+d=new_split:down
+
+# Copy/Paste
+keybind = cmd+c=copy_to_clipboard
+keybind = cmd+v=paste_from_clipboard
+
+# Clear
+keybind = cmd+k=clear_screen
+```
+
+## Migration from Alacritty
+
+<CardGroup cols={2}>
+  <Card title="Alacritty" icon="square-terminal">
+    GPU-accelerated, minimal, cross-platform terminal
+  </Card>
+  <Card title="Ghostty" icon="ghost">
+    GPU-accelerated with additional features and native UI
+  </Card>
+</CardGroup>
+
+### Feature Comparison
+
+| Feature | Alacritty | Ghostty |
+|---------|-----------|----------|
+| GPU Acceleration | ✅ | ✅ |
+| Performance | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Config File | YAML/TOML | Custom format |
+| Tabs | ➖ | ✅ |
+| Splits | ➖ | ✅ |
+| Ligatures | ✅ | ✅ |
+| Shell Integration | ➖ | ✅ |
+| True Color | ✅ | ✅ |
+| Cross-platform | ✅ | ✅ (macOS, Linux) |
+
+### Configuration Migration
+
+Alacritty uses YAML/TOML while Ghostty uses a simpler key-value format.
+
+**Alacritty config location:**
+- `~/.config/alacritty/alacritty.yml` or `.toml`
+
+**Ghostty config location:**
+- `~/.config/ghostty/config`
+
+**Example conversion:**
+
+<CodeGroup>
+```yaml Alacritty (alacritty.yml)
+font:
+  normal:
+    family: JetBrains Mono
+  size: 12.0
+
+colors:
+  primary:
+    background: '#1e1e1e'
+    foreground: '#d4d4d4'
+
+window:
+  padding:
+    x: 8
+    y: 8
+  decorations: full
+
+cursor:
+  style:
+    shape: Block
+    blinking: On
+
+scrollback:
+  limit: 10000
+```
+
+```text Ghostty (config)
+font-family = "JetBrains Mono"
+font-size = 12
+
+background = 1e1e1e
+foreground = d4d4d4
+
+window-padding-x = 8
+window-padding-y = 8
+
+cursor-style = block
+cursor-style-blink = true
+
+scrollback-limit = 10000
+```
+</CodeGroup>
+
+### Key Differences
+
+- **Tabs/Splits**: Ghostty has built-in tabs and splits, whereas Alacritty requires tmux or similar
+- **Shell Integration**: Ghostty includes shell integration features
+- **Native UI**: Ghostty has native window management vs Alacritty's custom rendering
+
+## Migration from Kitty
+
+<CardGroup cols={2}>
+  <Card title="Kitty" icon="square-terminal">
+    GPU-accelerated with advanced features and scripting
+  </Card>
+  <Card title="Ghostty" icon="ghost">
+    Native UI with competitive features and performance
+  </Card>
+</CardGroup>
+
+### Feature Comparison
+
+| Feature | Kitty | Ghostty |
+|---------|-------|----------|
+| GPU Acceleration | ✅ | ✅ |
+| Tabs | ✅ | ✅ |
+| Splits/Layouts | ✅ | ✅ |
+| Ligatures | ✅ | ✅ |
+| Images | ✅ (Kitty graphics protocol) | ⚠️ (Limited) |
+| Extensions | ✅ (Kittens) | ➖ |
+| Remote Control | ✅ | ⚠️ (Limited) |
+| Native UI | ➖ | ✅ |
+| True Color | ✅ | ✅ |
+
+### Configuration Migration
+
+Kitty and Ghostty both use key-value configuration formats, making migration straightforward.
+
+**Config locations:**
+- Kitty: `~/.config/kitty/kitty.conf`
+- Ghostty: `~/.config/ghostty/config`
+
+**Example conversion:**
+
+<CodeGroup>
+```conf Kitty (kitty.conf)
+font_family      JetBrains Mono
+font_size        12.0
+
+background       #1e1e1e
+foreground       #d4d4d4
+
+window_padding_width  8
+
+cursor_shape     block
+cursor_blink_interval  0.5
+
+scrollback_lines 10000
+
+tab_bar_style    powerline
+```
+
+```text Ghostty (config)
+font-family = "JetBrains Mono"
+font-size = 12
+
+background = 1e1e1e
+foreground = d4d4d4
+
+window-padding-x = 8
+window-padding-y = 8
+
+cursor-style = block
+cursor-style-blink = true
+
+scrollback-limit = 10000
+```
+</CodeGroup>
+
+### Key Differences
+
+- **Syntax**: Kitty uses underscores (`font_family`), Ghostty uses hyphens (`font-family`)
+- **Kittens**: Ghostty doesn't have an equivalent extension system
+- **Layouts**: Both support splits, but with different management approaches
+- **Graphics**: Kitty's graphics protocol is more extensive
+
+## Migration from Terminal.app
+
+<CardGroup cols={2}>
+  <Card title="Terminal.app" icon="square-terminal">
+    macOS default terminal with basic features
+  </Card>
+  <Card title="Ghostty" icon="ghost">
+    Modern native macOS terminal with advanced features
+  </Card>
+</CardGroup>
+
+### Feature Comparison
+
+| Feature | Terminal.app | Ghostty |
+|---------|--------------|----------|
+| Native macOS | ✅ | ✅ |
+| Tabs | ✅ | ✅ |
+| Splits | ➖ | ✅ |
+| GPU Acceleration | ⚠️ | ✅ (Metal) |
+| Ligatures | ✅ | ✅ |
+| Profiles | ✅ | ✅ (via config) |
+| Shell Integration | Basic | Advanced |
+| Performance | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| True Color | ✅ | ✅ |
+
+### Configuration Migration
+
+Terminal.app uses GUI preferences while Ghostty uses a text config file.
+
+**Basic Ghostty config:**
+
+```
+# Font (Terminal.app default)
+font-family = "SF Mono"
+font-size = 11
+
+# Colors (Terminal.app "Basic" theme)
+background = ffffff
+foreground = 000000
+
+# Cursor
+cursor-style = block
+cursor-style-blink = true
+
+# Window
+window-padding-x = 2
+window-padding-y = 2
+
+# Shell integration
+shell-integration = true
+```
+
+## General Configuration Tips
+
+### Theme/Color Schemes
+
+Many terminal color schemes are available online. To use them with Ghostty:
+
+1. **Create a theme file**: `~/.config/ghostty/themes/my-theme`
+2. **Add colors** in the format:
+   ```
+   background = 282c34
+   foreground = abb2bf
+   # ... more colors
+   ```
+3. **Reference in config**:
+   ```
+   theme = my-theme
+   ```
+
+Popular theme collections:
+- [Gogh](https://gogh-co.github.io/Gogh/)
+- [iTerm2 Color Schemes](https://iterm2colorschemes.com/)
+
+### Font Configuration
+
+```
+# Basic font setup
+font-family = "JetBrains Mono"
+font-size = 13
+
+# Enable ligatures
+font-feature = +calt
+font-feature = +liga
+
+# Font variations
+font-style = Regular
+font-style-bold = Bold
+font-style-italic = Italic
+```
+
+### Performance Tuning
+
+If migrating from a slower terminal:
+
+```
+# Ensure GPU rendering is enabled (default)
+renderer = auto
+
+# Adjust scrollback for performance
+scrollback-limit = 10000
+
+# Disable expensive features if needed
+background-opacity = 1.0
+background-blur-radius = 0
+```
+
+## Tmux Users
+
+If you use tmux heavily:
+
+- Ghostty has built-in tabs and splits that may reduce your need for tmux
+- Ghostty works great with tmux if you still need it
+- Shell integration works inside tmux sessions
+
+**Example config for tmux users:**
+```
+# Ensure true color support
+shell-integration = true
+
+# Good defaults for tmux
+scrollback-limit = 50000
+
+# Copy mode compatibility
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+```
+
+## Next Steps
+
+After migrating:
+
+1. **Explore the config reference**: [Configuration Documentation](/docs/config)
+2. **Set up shell integration**: Enhanced prompt features and navigation
+3. **Customize keybindings**: Make Ghostty feel like home
+4. **Try advanced features**: 
+   - Custom inspector for debugging
+   - Shell integration features
+   - Native platform features
+
+<Note>
+Ghostty is actively developed. Check the [GitHub repository](https://github.com/ghostty-org/ghostty) for the latest features and updates.
+</Note>
+
+## Getting Help
+
+If you need help during migration:
+
+- [GitHub Discussions](https://github.com/ghostty-org/ghostty/discussions) - Q&A and community help
+- [Discord Server](https://discord.gg/ghostty) - Real-time help in the #help channel
+- [Troubleshooting Guide](/guides/troubleshooting) - Common issues and solutions

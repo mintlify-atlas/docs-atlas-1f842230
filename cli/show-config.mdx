@@ -1,0 +1,213 @@
+---
+title: show-config
+description: Display the current configuration in valid config file format
+---
+
+The `show-config` command outputs the current Ghostty configuration in a valid configuration file format.
+
+## Usage
+
+```bash
+ghostty +show-config [options]
+```
+
+## Description
+
+This command displays the effective configuration that Ghostty is using. By default, it only shows options that differ from the default values. The output is valid Ghostty configuration syntax that can be copied directly into a config file.
+
+The output format may not exactly match your input configuration files (comments, whitespace, and formatting are not preserved), but it will result in the same behavior.
+
+## Options
+
+<ParamField path="--default" type="boolean">
+  Show the default configuration instead of loading the user configuration. Useful for seeing what Ghostty's built-in defaults are.
+</ParamField>
+
+<ParamField path="--changes-only" type="boolean" default="true">
+  Only show options that have been changed from the default values. This has no effect when `--default` is specified.
+  
+  Set to `false` to show all configuration options regardless of whether they've been changed.
+</ParamField>
+
+<ParamField path="--docs" type="boolean">
+  Print documentation above each option as a comment. This makes the output very verbose but is extremely useful for learning about available options, especially when combined with `--default`.
+</ParamField>
+
+<ParamField path="-h, --help" type="flag">
+  Display help information for this command.
+</ParamField>
+
+## Examples
+
+### Show Your Current Changes
+
+```bash
+ghostty +show-config
+```
+
+<CodeGroup>
+```text Output
+theme = nord
+font-family = "JetBrains Mono"
+font-size = 14
+window-padding-x = 4
+window-padding-y = 4
+keybind = super+t=new_tab
+keybind = super+w=close_surface
+```
+</CodeGroup>
+
+Shows only the configuration options you've changed from defaults.
+
+### Show All Default Options
+
+```bash
+ghostty +show-config --default --changes-only=false
+```
+
+<CodeGroup>
+```text Output
+theme = default
+font-family = monospace
+font-size = 12
+font-thicken = false
+window-padding-x = 2
+window-padding-y = 2
+window-decoration = true
+cursor-style = block
+cursor-style-blink = false
+mouse-hide-while-typing = false
+shell-integration = detect
+auto-update = off
+...(hundreds more options)
+```
+</CodeGroup>
+
+### Show Config with Documentation
+
+```bash
+ghostty +show-config --default --docs
+```
+
+<CodeGroup>
+```text Output
+# The theme to use for the terminal. Themes define the color palette
+# and other visual properties. You can list available themes with
+# the list-themes command.
+theme = default
+
+# The font family to use for the terminal. This should be a monospace
+# font. You can specify multiple fallback fonts by using the font-family
+# option multiple times.
+font-family = monospace
+
+# The font size in points. This is the base font size that will be
+# used for the terminal.
+font-size = 12
+
+# If true, the font will be artificially thickened. This can help
+# improve readability on some displays.
+font-thicken = false
+...
+```
+</CodeGroup>
+
+Perfect for learning about all available configuration options.
+
+### Backup Your Configuration
+
+```bash
+ghostty +show-config > backup-config.txt
+```
+
+Save your current configuration to a file.
+
+### Compare with Defaults
+
+```bash
+diff <(ghostty +show-config --default --changes-only=false) <(ghostty +show-config --changes-only=false)
+```
+
+See exactly what's different between your config and defaults.
+
+### Export for Sharing
+
+```bash
+ghostty +show-config > my-ghostty-config.txt
+```
+
+Export your configuration to share with others (be sure to review for sensitive information first).
+
+## Output Format
+
+The output follows standard Ghostty configuration syntax:
+
+```text Format
+# Comments (only with --docs)
+option-name = value
+
+# Repeatable options appear multiple times
+font-family = "First Font"
+font-family = "Fallback Font"
+
+keybind = ctrl+c=copy_to_clipboard
+keybind = ctrl+v=paste_from_clipboard
+```
+
+## Use Cases
+
+### For New Users
+
+Explore all available options and their defaults:
+
+```bash
+ghostty +show-config --default --docs | less
+```
+
+### For Configuration Management
+
+Generate a clean configuration file:
+
+```bash
+ghostty +show-config > ~/.config/ghostty/config
+```
+
+### For Debugging
+
+Verify what Ghostty is actually loading:
+
+```bash
+ghostty +show-config
+```
+
+If an option doesn't appear, it's using the default value.
+
+### For Documentation
+
+Generate configuration with inline documentation:
+
+```bash
+ghostty +show-config --default --docs > ghostty-config-reference.txt
+```
+
+## Notes
+
+<Note>
+  The output order is consistent between runs but doesn't necessarily match the order in your input files. Options are grouped logically by the configuration system.
+</Note>
+
+<Note>
+  When using `--changes-only=false` without `--default`, you'll see your customized values merged with all default values.
+</Note>
+
+<Note>
+  Conditional configurations and platform-specific settings are evaluated before output, so you'll see the effective configuration for your current platform.
+</Note>
+
+## See Also
+
+- [validate-config](/cli/validate-config) - Validate configuration files
+- [edit-config](/cli/edit-config) - Open config in editor
+- [Configuration Reference](/config/reference)
+- [list-themes](/cli/list-themes)
+- [list-fonts](/cli/list-fonts)

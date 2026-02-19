@@ -1,0 +1,475 @@
+---
+title: Embedding Ghostty
+description: Step-by-step guide to embedding libghostty in your application
+---
+
+# Embedding Ghostty
+
+This guide walks through the process of embedding libghostty into your application. We'll build a minimal terminal emulator from scratch.
+
+<Warning>
+  The libghostty embedding API is currently only used by the macOS app and is not yet a general-purpose API. Expect breaking changes.
+</Warning>
+
+## Prerequisites
+
+Before embedding libghostty, you'll need:
+
+- C compiler with C11 support
+- Platform-specific development tools (Xcode for macOS, GTK for Linux)
+- libghostty headers and library
+- Basic understanding of your platform's UI framework
+
+## Build System Integration
+
+<Steps>
+  <Step title="Link libghostty">
+    Add libghostty to your build system:
+    
+    **CMake:**
+    ```cmake
+    find_library(GHOSTTY_LIB ghostty)
+    target_link_libraries(your_app ${GHOSTTY_LIB})
+    target_include_directories(your_app PRIVATE /path/to/ghostty/include)
+    ```
+    
+    **Xcode:**
+    ```xml
+    <!-- Link against libghostty.a or libghostty.dylib -->
+    <!-- Add include/ghostty.h to Header Search Paths -->
+    ```
+    
+    **zig build:**
+    ```zig
+    const exe = b.addExecutable(.{
+        .name = "your_app",
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.linkLibrary(ghostty_lib);
+    exe.addIncludePath(.{ .path = "path/to/include" });
+    ```
+  </Step>
+  
+  <Step title="Include headers">
+    Include the main header in your source files:
+    
+    ```c
+    #include <ghostty.h>
+    ```
+  </Step>
+</Steps>
+
+## Implementation Steps
+
+<Steps>
+  <Step title="Initialize global state">
+    Call `ghostty_init()` once at application startup:
+    
+    ```c
+    int main(int argc, char** argv) {
+        // Initialize ghostty
+        if (ghostty_init(argc, (char**)argv) != GHOSTTY_SUCCESS) {
+            fprintf(stderr, "Failed to initialize ghostty\n");
+            return 1;
+        }
+        
+        // Rest of your application...
+    }
+    ```
+    
+    This initializes internal allocators, logging, and other global state.
+  </Step>
+  
+  <Step title="Create and configure settings">
+    Create a configuration object and load settings:
+    
+    ```c
+    // Create new config
+    ghostty_config_t config = ghostty_config_new();
+    
+    // Load configuration from default files
+    // This looks for ~/.config/ghostty/config
+    ghostty_config_load_default_files(config);
+    
+    // Or load from a specific file
+    ghostty_config_load_file(config, "/path/to/config");
+    
+    // Finalize configuration (required)
+    ghostty_config_finalize(config);
+    
+    // Check for configuration errors
+    uint32_t diag_count = ghostty_config_diagnostics_count(config);
+    for (uint32_t i = 0; i < diag_count; i++) {
+        ghostty_diagnostic_s diag = ghostty_config_get_diagnostic(config, i);
+        fprintf(stderr, "Config error: %s\n", diag.message);
+    }
+    ```
+  </Step>
+  
+  <Step title="Implement runtime callbacks">
+    Implement the callback functions that libghostty will use to communicate with your app:
+    
+    ```c
+    // Called when libghostty needs the event loop to wake up
+    void my_wakeup_cb(void* userdata) {
+        MyApp* app = (MyApp*)userdata;
+        // Signal your event loop to wake up
+        dispatch_async(app->main_queue, ^{
+            // Process pending events
+        });
+    }
+    
+    // Called when terminal requests an action
+    bool my_action_cb(ghostty_app_t app, 
+                      ghostty_target_s target,
+                      ghostty_action_s action) {
+        switch (action.tag) {
+            case GHOSTTY_ACTION_RING_BELL:
+                // Ring the terminal bell
+                NSBeep();
+                return true;
+                
+            case GHOSTTY_ACTION_SET_TITLE:
+                // Update window title
+                update_window_title(action.action.set_title.title);
+                return true;
+                
+            case GHOSTTY_ACTION_DESKTOP_NOTIFICATION:
+                // Show a notification
+                show_notification(
+                    action.action.desktop_notification.title,
+                    action.action.desktop_notification.body
+                );
+                return true;
+                
+            default:
+                // Unhandled action
+                return false;
+        }
+    }
+    
+    // Called when terminal needs clipboard access
+    void my_read_clipboard_cb(void* userdata,
+                              ghostty_clipboard_e clipboard,
+                              void* request_userdata) {
+        const char* text = get_clipboard_text(clipboard);
+        // Complete the clipboard request
+        ghostty_surface_complete_clipboard_request(
+            (ghostty_surface_t)request_userdata,
+            text,
+            request_userdata,
+            true
+        );
+    }
+    
+    void my_write_clipboard_cb(void* userdata,
+                               ghostty_clipboard_e clipboard,
+                               const ghostty_clipboard_content_s* content,
+                               size_t content_count,
+                               bool confirm) {
+        // Write to clipboard
+        for (size_t i = 0; i < content_count; i++) {
+            if (strcmp(content[i].mime, "text/plain") == 0) {
+                set_clipboard_text(clipboard, content[i].data);
+                break;
+            }
+        }
+    }
+    
+    void my_close_surface_cb(void* userdata, bool confirmed) {
+        MyApp* app = (MyApp*)userdata;
+        // Close the terminal surface/window
+        close_terminal_window(app);
+    }
+    ```
+  </Step>
+  
+  <Step title="Create the app instance">
+    Create the main ghostty app with your callbacks:
+    
+    ```c
+    // Set up runtime configuration
+    ghostty_runtime_config_s runtime = {
+        .userdata = my_app_instance,
+        .supports_selection_clipboard = true,  // X11 selection support
+        .wakeup_cb = my_wakeup_cb,
+        .action_cb = my_action_cb,
+        .read_clipboard_cb = my_read_clipboard_cb,
+        .write_clipboard_cb = my_write_clipboard_cb,
+        .close_surface_cb = my_close_surface_cb,
+    };
+    
+    // Create app
+    ghostty_app_t app = ghostty_app_new(&runtime, config);
+    if (!app) {
+        fprintf(stderr, "Failed to create app\n");
+        return 1;
+    }
+    ```
+  </Step>
+  
+  <Step title="Create a terminal surface">
+    Create a surface for rendering the terminal:
+    
+    <Tabs>
+      <Tab title="macOS">
+        ```c
+        // Get default surface config
+        ghostty_surface_config_s surf_config = ghostty_surface_config_new();
+        
+        // Configure for macOS
+        surf_config.platform_tag = GHOSTTY_PLATFORM_MACOS;
+        surf_config.platform.macos.nsview = (__bridge void*)myNSView;
+        surf_config.userdata = my_surface_data;
+        surf_config.scale_factor = [myNSView.window backingScaleFactor];
+        surf_config.font_size = 13.0;
+        surf_config.working_directory = "/Users/username";
+        
+        // Create surface
+        ghostty_surface_t surface = ghostty_surface_new(app, &surf_config);
+        ```
+      </Tab>
+      <Tab title="iOS">
+        ```c
+        ghostty_surface_config_s surf_config = ghostty_surface_config_new();
+        
+        surf_config.platform_tag = GHOSTTY_PLATFORM_IOS;
+        surf_config.platform.ios.uiview = (__bridge void*)myUIView;
+        surf_config.userdata = my_surface_data;
+        surf_config.scale_factor = [UIScreen mainScreen].scale;
+        surf_config.font_size = 12.0;
+        
+        ghostty_surface_t surface = ghostty_surface_new(app, &surf_config);
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Handle input events">
+    Forward keyboard and mouse events to the surface:
+    
+    ```c
+    // Keyboard input
+    void on_key_event(NSEvent* event) {
+        ghostty_input_key_s key = {
+            .action = event.isARepeat ? GHOSTTY_ACTION_REPEAT : GHOSTTY_ACTION_PRESS,
+            .mods = convert_modifiers(event.modifierFlags),
+            .consumed_mods = GHOSTTY_MODS_NONE,
+            .keycode = event.keyCode,
+            .text = [event.characters UTF8String],
+            .unshifted_codepoint = 0,
+            .composing = false,
+        };
+        
+        ghostty_surface_key(surface, key);
+    }
+    
+    // Mouse input
+    void on_mouse_button(NSEvent* event) {
+        ghostty_input_mouse_button_e button = GHOSTTY_MOUSE_LEFT;
+        ghostty_input_mouse_state_e state = 
+            (event.type == NSEventTypeLeftMouseDown) ?
+            GHOSTTY_MOUSE_PRESS : GHOSTTY_MOUSE_RELEASE;
+        ghostty_input_mods_e mods = convert_modifiers(event.modifierFlags);
+        
+        ghostty_surface_mouse_button(surface, state, button, mods);
+    }
+    
+    void on_mouse_move(NSEvent* event) {
+        NSPoint point = [myView convertPoint:event.locationInWindow fromView:nil];
+        ghostty_surface_mouse_pos(
+            surface,
+            point.x,
+            point.y,
+            convert_modifiers(event.modifierFlags)
+        );
+    }
+    
+    void on_scroll(NSEvent* event) {
+        ghostty_surface_mouse_scroll(
+            surface,
+            event.scrollingDeltaX,
+            event.scrollingDeltaY,
+            convert_modifiers(event.modifierFlags)
+        );
+    }
+    ```
+  </Step>
+  
+  <Step title="Integrate with render loop">
+    Call libghostty functions in your render loop:
+    
+    ```c
+    void render_frame() {
+        // Tick the app (process IO, timers, etc.)
+        ghostty_app_tick(app);
+        
+        // Draw the surface
+        ghostty_surface_draw(surface);
+        
+        // Platform-specific presentation
+        // (handled by libghostty internally for Metal/OpenGL)
+    }
+    
+    // Handle resize
+    void on_resize(uint32_t width, uint32_t height) {
+        ghostty_surface_set_size(surface, width, height);
+    }
+    
+    // Handle scale factor changes (e.g., moving between displays)
+    void on_scale_change(double scale_x, double scale_y) {
+        ghostty_surface_set_content_scale(surface, scale_x, scale_y);
+    }
+    ```
+  </Step>
+  
+  <Step title="Clean up on exit">
+    Free all resources when the app exits:
+    
+    ```c
+    void cleanup() {
+        // Free surfaces
+        ghostty_surface_free(surface);
+        
+        // Free app
+        ghostty_app_free(app);
+        
+        // Free config
+        ghostty_config_free(config);
+    }
+    ```
+  </Step>
+</Steps>
+
+## Complete Example
+
+Here's a complete minimal example for macOS:
+
+```c
+#include <ghostty.h>
+#import <Cocoa/Cocoa.h>
+
+@interface TerminalView : NSView
+@property ghostty_surface_t surface;
+@end
+
+@implementation TerminalView
+- (void)drawRect:(NSRect)dirtyRect {
+    if (self.surface) {
+        ghostty_surface_draw(self.surface);
+    }
+}
+@end
+
+typedef struct {
+    ghostty_app_t app;
+    TerminalView* view;
+} AppData;
+
+void wakeup_cb(void* userdata) {
+    AppData* data = (AppData*)userdata;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [data->view setNeedsDisplay:YES];
+    });
+}
+
+bool action_cb(ghostty_app_t app, ghostty_target_s target, ghostty_action_s action) {
+    // Handle actions...
+    return true;
+}
+
+int main(int argc, char** argv) {
+    @autoreleasepool {
+        // Initialize
+        if (ghostty_init(argc, (char**)argv) != GHOSTTY_SUCCESS) {
+            return 1;
+        }
+        
+        // Create config
+        ghostty_config_t config = ghostty_config_new();
+        ghostty_config_load_default_files(config);
+        ghostty_config_finalize(config);
+        
+        // Create app data
+        AppData* app_data = malloc(sizeof(AppData));
+        
+        // Runtime config
+        ghostty_runtime_config_s runtime = {
+            .userdata = app_data,
+            .wakeup_cb = wakeup_cb,
+            .action_cb = action_cb,
+            // ... other callbacks
+        };
+        
+        // Create app
+        app_data->app = ghostty_app_new(&runtime, config);
+        
+        // Create window and view
+        NSWindow* window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 800, 600)
+                                                      styleMask:NSWindowStyleMaskTitled |
+                                                                NSWindowStyleMaskClosable |
+                                                                NSWindowStyleMaskResizable
+                                                        backing:NSBackingStoreBuffered
+                                                          defer:NO];
+        
+        TerminalView* view = [[TerminalView alloc] initWithFrame:window.contentView.bounds];
+        window.contentView = view;
+        app_data->view = view;
+        
+        // Create surface
+        ghostty_surface_config_s surf_config = ghostty_surface_config_new();
+        surf_config.platform_tag = GHOSTTY_PLATFORM_MACOS;
+        surf_config.platform.macos.nsview = (__bridge void*)view;
+        surf_config.scale_factor = window.backingScaleFactor;
+        
+        view.surface = ghostty_surface_new(app_data->app, &surf_config);
+        
+        // Show window
+        [window makeKeyAndOrderFront:nil];
+        
+        // Run app
+        [NSApp run];
+        
+        // Cleanup
+        ghostty_surface_free(view.surface);
+        ghostty_app_free(app_data->app);
+        ghostty_config_free(config);
+        free(app_data);
+    }
+    
+    return 0;
+}
+```
+
+## Next Steps
+
+- [Core Types](/api/core-types) - Learn about the types used in the API
+- [Configuration](/api/configuration) - Configure terminal behavior
+- [Input Handling](/api/input) - Handle keyboard and mouse events
+- [Rendering](/api/rendering) - Control rendering and display
+
+## Troubleshooting
+
+### Surface doesn't render
+
+Make sure you're calling:
+- `ghostty_app_tick()` regularly (at least once per frame)
+- `ghostty_surface_draw()` when rendering
+- `ghostty_surface_set_size()` after surface creation and on resize
+
+### Input not working
+
+Verify that:
+- You're correctly converting platform keycodes to `ghostty_input_key_e`
+- Modifier keys are properly mapped to `ghostty_input_mods_e`
+- The surface has focus via `ghostty_surface_set_focus(surface, true)`
+
+### Memory leaks
+
+Ensure you're freeing all resources:
+```c
+ghostty_surface_free(surface);  // Free surfaces first
+ghostty_app_free(app);          // Then app
+ghostty_config_free(config);    // Then config
+```

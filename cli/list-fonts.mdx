@@ -1,0 +1,121 @@
+---
+title: list-fonts
+description: List all available fonts using Ghostty's font discovery mechanism
+---
+
+The `list-fonts` command displays all fonts available to Ghostty using the same font discovery mechanism that Ghostty uses to find fonts for rendering.
+
+## Usage
+
+```bash
+ghostty +list-fonts [options]
+```
+
+## Description
+
+When executed with no arguments, this command lists all available fonts, sorted by family name, then font name. The output is grouped by font family for easier reading.
+
+If a family name is specified with `--family`, the sorting is disabled and results are shown in the same priority order Ghostty would use to pick a font. This is useful for debugging why your desired font may not be loading.
+
+## Options
+
+<ParamField path="--family" type="string">
+  Filter results to a specific font family. The family handling is identical to the `font-family` configuration value, so this can be used to debug font loading issues.
+  
+  When specified, results are shown in the priority order Ghostty uses for font selection rather than alphabetically.
+</ParamField>
+
+<ParamField path="--style" type="string">
+  Filter results based on the style string advertised by a font. Results matching this style are prioritized, but it's not guaranteed that only matching styles are returned.
+</ParamField>
+
+<ParamField path="--bold" type="boolean">
+  Filter results to bold styles. Matching styles are prioritized, but it's not guaranteed that only bold styles are returned.
+</ParamField>
+
+<ParamField path="--italic" type="boolean">
+  Filter results to italic styles. Matching styles are prioritized, but it's not guaranteed that only italic styles are returned.
+</ParamField>
+
+<ParamField path="-h, --help" type="flag">
+  Display help information for this command.
+</ParamField>
+
+## Examples
+
+### List All Available Fonts
+
+```bash
+ghostty +list-fonts
+```
+
+<CodeGroup>
+```text Output
+Cascadia Code
+  Cascadia Code Bold
+  Cascadia Code Bold Italic
+  Cascadia Code Italic
+  Cascadia Code Regular
+
+Fira Code
+  Fira Code Bold
+  Fira Code Light
+  Fira Code Medium
+  Fira Code Regular
+
+JetBrains Mono
+  JetBrains Mono Bold
+  JetBrains Mono Bold Italic
+  JetBrains Mono Italic
+  JetBrains Mono Regular
+```
+</CodeGroup>
+
+### Check Font Loading Priority
+
+```bash
+ghostty +list-fonts --family="JetBrains Mono"
+```
+
+<CodeGroup>
+```text Output
+JetBrains Mono
+  JetBrains Mono Regular
+  JetBrains Mono Bold
+  JetBrains Mono Italic
+  JetBrains Mono Bold Italic
+```
+</CodeGroup>
+
+This shows the exact order Ghostty would consider fonts from the JetBrains Mono family.
+
+### Filter by Bold Style
+
+```bash
+ghostty +list-fonts --bold
+```
+
+Displays all fonts, prioritizing bold variants.
+
+### Debug Font Configuration
+
+```bash
+ghostty +list-fonts --family="Monaco" --bold
+```
+
+Use this to verify if Ghostty can find a bold variant of Monaco, and in what priority order.
+
+## Notes
+
+<Note>
+  If Ghostty was built without font discovery support, this command will display an error message indicating that font discovery is not available.
+</Note>
+
+<Note>
+  The `--family` option uses the same matching logic as the `font-family` configuration option, making it perfect for debugging font loading issues in your config.
+</Note>
+
+## See Also
+
+- [Font Configuration](/config/fonts)
+- [list-themes](/cli/list-themes)

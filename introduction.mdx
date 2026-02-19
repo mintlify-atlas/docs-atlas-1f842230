@@ -1,0 +1,117 @@
+---
+title: Introduction to Ghostty
+description: A fast, native, feature-rich terminal emulator pushing modern features
+---
+
+# Welcome to Ghostty
+
+Ghostty is a terminal emulator that differentiates itself by being **fast**, **feature-rich**, and **native**. While there are many excellent terminal emulators available, they all force you to choose between speed, features, or native UIs. Ghostty provides all three.
+
+<Note>
+Ghostty is competitive in all three categories and doesn't make you choose between them. It aims to be one of the best fully standards-compliant terminal emulators while remaining compatible with all existing shells and software.
+</Note>
+
+## Why Ghostty?
+
+Ghostty was built to push the boundaries of what is possible with a terminal emulator by exposing modern, opt-in features that enable CLI tool developers to build more feature-rich, interactive applications.
+
+<CardGroup cols={2}>
+  <Card title="Lightning Fast" icon="bolt" href="/features/performance">
+    GPU-accelerated rendering with Metal on macOS and OpenGL on Linux. Maintains 60fps under heavy load with dedicated IO threading.
+  </Card>
+  <Card title="Standards Compliant" icon="check-circle">
+    One of the most compliant terminal emulators available, implementing comprehensive xterm behavior and supporting all latest terminal innovations.
+  </Card>
+  <Card title="Native Experience" icon="desktop">
+    True SwiftUI app on macOS with Metal renderer and CoreText. GTK-based on Linux. No least-common-denominator compromises.
+  </Card>
+  <Card title="Feature Rich" icon="sparkles" href="/features/splits-tabs">
+    Multi-window support, tabbing, splits, shell integration, custom themes, and extensive customization options.
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### Performance That Scales
+
+- **Metal on macOS**: Direct Metal rendering with full ligature support (the only terminal besides iTerm with Metal)
+- **OpenGL on Linux**: Hardware-accelerated rendering with minimal overhead
+- **Dedicated IO Thread**: Very little jitter under heavy IO load
+- **Optimized Text Rendering**: 4x faster than iTerm and Kitty, 2x faster than Terminal.app for plain text
+
+### Cross-Platform Native
+
+Ghostty is truly cross-platform but doesn't compromise on native experiences:
+
+- **macOS**: SwiftUI-based application with native menu bars, settings GUI, and Metal renderer
+- **Linux**: GTK-based application with native windowing
+- **Shared Core**: Large shared codebase written in Zig for consistency
+
+<Info>
+The macOS app is a native Swift application that uses `libghostty` through its C API. This architecture enables embedding Ghostty in any third-party project.
+</Info>
+
+### Richer Windowing
+
+- Multi-window support
+- Native tabbing interface
+- Window splits for side-by-side terminals
+- Cross-platform consistency
+
+### Modern Terminal Standards
+
+Ghostty implements:
+
+- ECMA-48 standard compliance
+- Comprehensive xterm compatibility
+- Support for popular terminal innovations
+- Drop-in replacement for existing terminal emulators
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Get up and running with Ghostty in under 5 minutes
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Ghostty on macOS or Linux
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/config/overview">
+    Customize fonts, colors, keybindings, and more
+  </Card>
+  <Card title="Building from Source" icon="code" href="/guides/building-from-source">
+    Build Ghostty yourself from the source code
+  </Card>
+</CardGroup>
+
+## Community and Development
+
+Ghostty is open source and actively developed. The project welcomes contributions through:
+
+- Bug reports and feature requests
+- Pull requests for improvements
+- Documentation contributions
+- Translation and localization
+
+For more details on contributing, see the [Contributing Guide](/guides/contributing).
+
+<Warning>
+Ghostty is under active development. While it's production-ready and used daily by thousands of users, some features are still being refined.
+</Warning>
+
+## Next Steps
+
+<Steps>
+  <Step title="Install Ghostty">
+    Follow the [installation guide](/installation) to get Ghostty running on your system
+  </Step>
+  <Step title="Complete the Quickstart">
+    Run through the [quickstart guide](/quickstart) to learn the basics
+  </Step>
+  <Step title="Customize Your Setup">
+    Explore the [configuration options](/config/overview) to make Ghostty your own
+  </Step>
+  <Step title="Learn Advanced Features">
+    Discover [shell integration](/features/shell-integration), [themes](/features/themes), and [performance tuning](/features/performance)
+  </Step>
+</Steps>

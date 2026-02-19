@@ -1,0 +1,337 @@
+---
+title: Splits and Tabs
+description: Organize your terminal workspace with splits and tabs
+---
+
+Ghostty supports both window splits and tabs, allowing you to organize multiple terminal sessions within a single window. This feature works on macOS and Linux (GTK).
+
+## Splits
+
+Splits allow you to divide a window into multiple panes, each running its own terminal session.
+
+### Creating Splits
+
+<CardGroup cols={2}>
+  <Card title="Default Keybindings (macOS)" icon="apple">
+    - `super+d` - Split right
+    - `super+shift+d` - Split down
+  </Card>
+  
+  <Card title="Default Keybindings (Linux)" icon="linux">
+    - `ctrl+shift+right` - Split right  
+    - `ctrl+shift+down` - Split down
+  </Card>
+</CardGroup>
+
+### Configuration
+
+Customize split creation keybindings:
+
+```ini ~/.config/ghostty/config
+# Create vertical split (left/right)
+keybind = ctrl+alt+d=new_split:right
+
+# Create horizontal split (top/bottom)  
+keybind = ctrl+alt+shift+d=new_split:down
+```
+
+The `new_split` action accepts:
+- `right` - Create split to the right
+- `down` - Create split below
+- `left` - Create split to the left  
+- `up` - Create split above
+
+### Navigating Between Splits
+
+<Steps>
+  <Step title="Use navigation keybindings">
+    <Tabs>
+      <Tab title="macOS Default">
+        - `super+alt+up` - Move to split above
+        - `super+alt+down` - Move to split below
+        - `super+alt+left` - Move to split left
+        - `super+alt+right` - Move to split right
+        - `super+alt+[` - Previous split
+        - `super+alt+]` - Next split
+      </Tab>
+      
+      <Tab title="Linux Default">
+        - `ctrl+shift+alt+up` - Move to split above
+        - `ctrl+shift+alt+down` - Move to split below
+        - `ctrl+shift+alt+left` - Move to split left
+        - `ctrl+shift+alt+right` - Move to split right
+        - `ctrl+shift+alt+page_up` - Previous split
+        - `ctrl+shift+alt+page_down` - Next split
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Configure custom navigation">
+    ```ini
+    keybind = ctrl+h=goto_split:left
+    keybind = ctrl+j=goto_split:down
+    keybind = ctrl+k=goto_split:up
+    keybind = ctrl+l=goto_split:right
+    
+    # Cycle through splits
+    keybind = ctrl+tab=goto_split:next
+    keybind = ctrl+shift+tab=goto_split:previous
+    ```
+  </Step>
+</Steps>
+
+The `goto_split` action accepts:
+- `left`, `right`, `up`, `down` - Move to adjacent split
+- `next`, `previous` - Cycle through splits
+
+### Split Appearance
+
+<CodeGroup>
+```ini Divider Color
+# Set the color of split dividers
+split-divider-color = #3e4451
+```
+
+```ini Unfocused Opacity
+# Dim unfocused splits (default: 0.7)
+unfocused-split-opacity = 0.8
+
+# Disable dimming
+unfocused-split-opacity = 1.0
+```
+
+```ini Unfocused Fill
+# Add a colored overlay to unfocused splits
+unfocused-split-fill = #000000
+```
+</CodeGroup>
+
+### Split Zoom
+
+Zoom a split to temporarily fill the entire window:
+
+```ini
+keybind = ctrl+shift+z=toggle_split_zoom
+```
+
+Control zoom preservation during navigation:
+
+```ini
+# Preserve zoom when navigating (zoomed split follows focus)
+split-preserve-zoom = navigation
+
+# Default: zoom is cleared when navigating or changing layout
+split-preserve-zoom = false
+```
+
+### Resizing Splits
+
+```ini
+keybind = ctrl+shift+left=resize_split:left,10
+keybind = ctrl+shift+right=resize_split:right,10
+keybind = ctrl+shift+up=resize_split:up,10
+keybind = ctrl+shift+down=resize_split:down,10
+```
+
+### Closing Splits
+
+Close the focused split:
+
+```ini
+keybind = ctrl+shift+w=close_surface
+```
+
+When you close a split, the remaining splits expand to fill the space.
+
+## Tabs
+
+Tabs provide another way to organize multiple terminal sessions, similar to browser tabs.
+
+### Creating Tabs
+
+<CardGroup cols={2}>
+  <Card title="macOS" icon="apple">
+    `super+t` - New tab
+  </Card>
+  
+  <Card title="Linux" icon="linux">
+    `ctrl+shift+t` - New tab
+  </Card>
+</CardGroup>
+
+Customize the keybinding:
+
+```ini
+keybind = ctrl+t=new_tab
+```
+
+### Navigating Between Tabs
+
+<Tabs>
+  <Tab title="macOS">
+    - `super+1` through `super+9` - Jump to specific tab
+    - `super+shift+[` - Previous tab
+    - `super+shift+]` - Next tab
+  </Tab>
+  
+  <Tab title="Linux">
+    - `ctrl+shift+1` through `ctrl+shift+9` - Jump to specific tab
+    - `ctrl+shift+page_up` - Previous tab
+    - `ctrl+shift+page_down` - Next tab
+  </Tab>
+</Tabs>
+
+Custom tab navigation:
+
+```ini
+keybind = alt+1=goto_tab:1
+keybind = alt+2=goto_tab:2
+keybind = ctrl+page_up=previous_tab
+keybind = ctrl+page_down=next_tab
+```
+
+### Tab Appearance
+
+Control tab visibility:
+
+```ini
+# Always show tabs
+window-show-tab-bar = true
+
+# Never show tabs
+window-show-tab-bar = false
+
+# Show tabs only when multiple exist (default)
+window-show-tab-bar = auto
+```
+
+### Tab Position (Linux/GTK)
+
+On Linux with GTK, you can configure tab bar position:
+
+```ini
+gtk-tabs-location = top     # Default
+gtk-tabs-location = bottom
+gtk-tabs-location = left
+gtk-tabs-location = right
+```
+
+### Closing Tabs
+
+```ini
+# macOS: super+w
+# Linux: ctrl+shift+w
+keybind = ctrl+w=close_surface
+```
+
+## Combining Splits and Tabs
+
+You can use splits and tabs together:
+
+1. Create tabs for different projects or contexts
+2. Use splits within each tab to view multiple terminals side-by-side
+
+```ini
+# Example workflow keybindings
+keybind = super+t=new_tab           # New project
+keybind = super+d=new_split:right   # Add editor + terminal
+keybind = super+shift+d=new_split:down  # Add log viewer
+```
+
+## Example Configurations
+
+<CodeGroup>
+```ini Vim-style Navigation
+# Splits
+keybind = ctrl+w+h=goto_split:left
+keybind = ctrl+w+j=goto_split:down
+keybind = ctrl+w+k=goto_split:up
+keybind = ctrl+w+l=goto_split:right
+
+# Split creation
+keybind = ctrl+w+v=new_split:right
+keybind = ctrl+w+s=new_split:down
+
+# Close split
+keybind = ctrl+w+q=close_surface
+```
+
+```ini Tmux-style Prefix
+# Use ctrl+a as a prefix (like tmux)
+keybind = ctrl+a>h=goto_split:left
+keybind = ctrl+a>j=goto_split:down
+keybind = ctrl+a>k=goto_split:up
+keybind = ctrl+a>l=goto_split:right
+
+keybind = ctrl+a>%=new_split:right
+keybind = ctrl+a>"=new_split:down
+
+keybind = ctrl+a>c=new_tab
+keybind = ctrl+a>n=next_tab
+keybind = ctrl+a>p=previous_tab
+```
+
+```ini Minimal Setup
+# Prefer tabs over splits
+keybind = ctrl+t=new_tab
+keybind = ctrl+page_up=previous_tab
+keybind = ctrl+page_down=next_tab
+
+# Only show tabs when needed
+window-show-tab-bar = auto
+
+# Disable split keybindings
+keybind = clear:super+d
+keybind = clear:super+shift+d
+```
+</CodeGroup>
+
+## Tips and Tricks
+
+<AccordionGroup>
+  <Accordion title="Visual feedback for focused split">
+    Make the focused split more obvious:
+    
+    ```ini
+    unfocused-split-opacity = 0.5
+    unfocused-split-fill = #000000
+    ```
+  </Accordion>
+  
+  <Accordion title="Quick window layouts">
+    Create keybindings for common layouts:
+    
+    ```ini
+    # Three-column layout
+    keybind = ctrl+alt+3=new_split:right>new_split:right
+    
+    # Two rows
+    keybind = ctrl+alt+2=new_split:down
+    ```
+  </Accordion>
+  
+  <Accordion title="Keep zoom when navigating">
+    Useful for temporarily maximizing a split:
+    
+    ```ini
+    split-preserve-zoom = navigation
+    keybind = ctrl+z=toggle_split_zoom
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Platform Differences
+
+| Feature | macOS | Linux (GTK) |
+|---------|-------|-------------|
+| Horizontal splits | ✅ | ✅ |
+| Vertical splits | ✅ | ✅ |
+| Tabs | ✅ | ✅ |
+| Tab positioning | ❌ | ✅ |
+| Native window integration | ✅ | ✅ |
+
+## Related Configuration
+
+- [keybind](/config/keybindings) - Configure keyboard shortcuts
+- [window-decoration](/config/window#window-decoration) - Window styling
+- See all [split and tab actions](/config/keybindings#actions)

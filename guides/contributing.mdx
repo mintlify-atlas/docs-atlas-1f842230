@@ -1,0 +1,340 @@
+---
+title: Contributing to Ghostty
+description: Learn how to contribute to Ghostty through bug reports, features, translations, and code contributions
+---
+
+This guide covers the process for contributing to Ghostty. Whether you want to report a bug, request a feature, or submit code, please read this document carefully.
+
+<Note>
+Ghostty is a personal project maintained in free time by its contributors. Please take a few minutes to read this guide to ensure your contributions can be reviewed and accepted efficiently. Thank you!
+</Note>
+
+## The Critical Rule
+
+<Warning>
+**You must understand your code.** If you can't explain what your changes do and how they interact with the greater system without the aid of AI tools, do not contribute to this project.
+</Warning>
+
+Using AI to write code is acceptable, but you must:
+- Fully understand all code you submit
+- Be able to explain design decisions
+- Answer questions about your implementation
+- Have interrogated the AI to grasp all edge cases and effects
+
+See the full [AI Usage Policy](https://github.com/ghostty-org/ghostty/blob/main/AI_POLICY.md) for details.
+
+## First-Time Contributors: Vouch System
+
+Ghostty uses a vouch system for first-time contributors to maintain code quality:
+
+<Steps>
+  <Step title="Open a Vouch Request">
+    Open a [discussion in the "Vouch Request" category](https://github.com/ghostty-org/ghostty/discussions/new?category=vouch-request) following the template.
+  </Step>
+  <Step title="Describe your contribution">
+    Keep it concise. Explain:
+    - What you want to change
+    - Why it's valuable
+    - Your approach (if applicable)
+
+    **Write in your own voice** - don't have AI write this.
+  </Step>
+  <Step title="Wait for approval">
+    A maintainer will comment `!vouch` if approved. Once vouched, you can submit pull requests.
+  </Step>
+</Steps>
+
+<Warning>
+**Unvouched contributors**: Any pull requests you open will be automatically closed. This system exists because AI has made it trivial to generate plausible-looking but low-quality contributions.
+</Warning>
+
+## Denouncement System
+
+If you repeatedly break the rules or submit low-quality work, you will be **denounced**:
+
+- Your username will be added to a public list of bad actors
+- All future interactions will be automatically closed
+- Other projects may use this list to block you automatically
+
+<Note>
+We love helping junior developers learn and grow! If you want to learn, don't rely on AI - ask for help and guidance instead. The denouncement system is for bad actors, not learners.
+</Note>
+
+## Quick Guide for Contributors
+
+### I'd like to contribute code
+
+<Steps>
+  <Step title="Find an actionable issue">
+    Browse the [issue tracker](https://github.com/ghostty-org/ghostty/issues). **All issues are actionable** - every issue is ready to be worked on.
+
+    Look for issues tagged ["contributor friendly"](https://github.com/ghostty-org/ghostty/issues?q=is%3Aissue+is%3Aopen+label%3A%22contributor+friendly%22) if you're new.
+  </Step>
+  <Step title="Comment on the issue">
+    Let others know you're working on it. Ask questions if you need guidance.
+  </Step>
+  <Step title="Read the development guide">
+    See [HACKING.md](https://github.com/ghostty-org/ghostty/blob/main/HACKING.md) for technical details on building and testing.
+  </Step>
+  <Step title="Submit a pull request">
+    Follow the [Pull Request Guidelines](#pull-request-guidelines) below.
+  </Step>
+</Steps>
+
+### I'd like to translate Ghostty
+
+Translations are welcome! See the [Translator's Guide](https://github.com/ghostty-org/ghostty/blob/main/po/README_TRANSLATORS.md).
+
+Translations usually don't need issue triage and can be submitted directly as pull requests. Make sure to follow the [Style Guide](https://github.com/ghostty-org/ghostty/blob/main/po/README_TRANSLATORS.md#style-guide).
+
+### I have a bug to report
+
+<Steps>
+  <Step title="Search existing issues">
+    Search both [open](https://github.com/ghostty-org/ghostty/issues) and [closed](https://github.com/ghostty-org/ghostty/issues?q=is%3Aissue+state%3Aclosed) issues and [discussions](https://github.com/ghostty-org/ghostty/discussions) - your bug might already be fixed!
+  </Step>
+  <Step title="Open an Issue Triage discussion">
+    If not found, open an ["Issue Triage" discussion](https://github.com/ghostty-org/ghostty/discussions/new?category=issue-triage) and **fill in the template completely**.
+
+    <Warning>
+    Do NOT file bug reports as Q&A or Feature Requests. Use "Issue Triage" for bugs - it collects vital system information.
+    </Warning>
+  </Step>
+  <Step title="Wait for triage">
+    Maintainers will investigate and move it to the issue tracker if actionable.
+  </Step>
+</Steps>
+
+<Note>
+If there's an existing open issue that matches your problem, **don't comment unless you have valuable insight**. Use the upvote button or emoji reactions instead to avoid spamming all participants.
+</Note>
+
+### I have a feature request
+
+<Steps>
+  <Step title="Search existing discussions and issues">
+    Your feature may have already been requested or implemented.
+  </Step>
+  <Step title="Open a Feature Request discussion">
+    If not found, open a discussion in the ["Feature Requests, Ideas" category](https://github.com/ghostty-org/ghostty/discussions/new?category=feature-requests-ideas).
+  </Step>
+  <Step title="Wait for feedback">
+    Maintainers will discuss the feature. If accepted and well-scoped, it will be moved to the issue tracker.
+  </Step>
+</Steps>
+
+### I have a question
+
+For general questions:
+
+- Open a [Q&A discussion](https://github.com/ghostty-org/ghostty/discussions/new?category=q-a)
+- Join the [Discord Server](https://discord.gg/ghostty) and ask in the `#help` forum channel
+
+<Note>
+If your question is about a missing feature, use "Feature Requests". If Ghostty is behaving unexpectedly, use "Issue Triage".
+</Note>
+
+## Important Patterns
+
+### Issues are Actionable
+
+The Ghostty [issue tracker](https://github.com/ghostty-org/ghostty/issues) is for **actionable items only**.
+
+- **Discussions** are for bug reports, feature requests, and questions
+- **Issues** are for well-understood, actionable work
+- Once a discussion reaches a clear action item, it's moved to the issue tracker
+- This makes it easy to find work that's ready to start
+
+### Pull Requests Implement an Issue
+
+Pull requests should be associated with a previously accepted issue.
+
+<Warning>
+If you open a pull request for something that wasn't previously discussed, it may be closed or remain stale indefinitely.
+</Warning>
+
+Issues tagged with "feature" represent accepted, well-scoped feature requests. If you implement an issue as described, your PR will likely be accepted.
+
+<Note>
+**Pull requests are NOT a place to discuss feature design.** Use discussions and link to your branch instead.
+</Note>
+
+## AI Usage Policy
+
+Ghostty has strict rules for AI usage. Please read the full [AI Usage Policy](https://github.com/ghostty-org/ghostty/blob/main/AI_POLICY.md).
+
+<Warning>
+**All AI usage must be disclosed.** State:
+- The tool you used (e.g., Claude Code, Cursor, Amp, GitHub Copilot)
+- The extent of AI assistance
+- What you understand vs what was AI-generated
+</Warning>
+
+**Key rules:**
+
+- You must fully understand all code you submit
+- No AI-generated media (art, images, videos, audio)
+- Issues and discussions can use AI but must be human-reviewed and edited
+- Bad AI drivers will be denounced
+
+**The project welcomes AI as a tool**, but holds high standards for contributors who use it. Most AI usage issues stem from unqualified people using AI, not from AI itself.
+
+### AI Assistance for Development
+
+If you're using AI to help develop Ghostty:
+
+- Ghostty provides an [AGENTS.md file](https://github.com/ghostty-org/ghostty/blob/main/AGENTS.md) for AI agents
+- Commands in `.agents/commands` have vetted prompts for common tasks
+- Example: `/gh-issue <number/url>` for diagnosing GitHub issues (requires `gh` CLI)
+
+## Pull Request Guidelines
+
+<Steps>
+  <Step title="Link to the issue">
+    Reference the issue your PR implements:
+    ```
+    Fixes #1234
+    ```
+  </Step>
+  <Step title="Write clear commit messages">
+    Focus on the "why" rather than the "what":
+    ```
+    Add support for custom keybindings
+
+    Implements #1234. Users can now define custom keybindings
+    in their config file using the keybind option.
+    ```
+  </Step>
+  <Step title="Test your changes">
+    Run tests before submitting:
+    ```bash
+    zig build test
+    ```
+  </Step>
+  <Step title="Format your code">
+    ```bash
+    # Zig code
+    zig fmt .
+
+    # Other files
+    prettier --write .
+    ```
+  </Step>
+  <Step title="Disclose AI usage (if applicable)">
+    In your PR description, disclose any AI assistance:
+    ```
+    AI Disclosure: Used GitHub Copilot for boilerplate code.
+    All logic was written and verified by me.
+    ```
+  </Step>
+</Steps>
+
+## Development Workflow
+
+For technical details on building, testing, and developing Ghostty:
+
+**Read [HACKING.md](https://github.com/ghostty-org/ghostty/blob/main/HACKING.md)** - includes:
+- Building from source
+- Development dependencies
+- Running tests
+- Memory leak checking
+- Logging and debugging
+- Platform-specific requirements
+
+**Key commands:**
+
+```bash
+# Build debug version
+zig build
+
+# Run Ghostty
+zig build run
+
+# Run tests
+zig build test
+
+# Run specific tests
+zig build test -Dtest-filter=terminal
+
+# Check for memory leaks (Linux)
+zig build run-valgrind
+
+# Format code
+zig fmt .
+prettier --write .
+```
+
+## Code Standards
+
+### Zig Code
+
+- Follow Zig style guidelines
+- Run `zig fmt .` before committing
+- Write tests for new functionality
+- Document public APIs
+
+### Documentation and Resources
+
+- Format with Prettier: `prettier --write .`
+- Match the Prettier version in `nix/devShell.nix`
+- Use clear, concise language
+
+### Commit Messages
+
+- Summarize the change (add, update, fix, refactor, etc.)
+- Focus on "why" not "what"
+- Reference issue numbers
+- Keep first line under 72 characters
+
+**Example:**
+```
+Add support for custom color schemes
+
+Fixes #1234. Users can now define custom color schemes in separate
+files and reference them from the main config. This makes it easier
+to switch between themes.
+```
+
+## Contributing Documentation
+
+Documentation contributions are welcome:
+
+- Fix typos or unclear explanations
+- Add examples
+- Improve configuration documentation
+- Write tutorials or guides
+
+Documentation files are in various locations:
+- Main docs: Check the Ghostty website repository
+- Development docs: `HACKING.md`, `CONTRIBUTING.md`
+- Translation docs: `po/README_TRANSLATORS.md`, `po/README_CONTRIBUTORS.md`
+
+## Getting Help
+
+If you need help contributing:
+
+- **Comment on the issue** you're working on
+- **Ask in Discord**: [Ghostty Discord Server](https://discord.gg/ghostty) - use the `#development` channel
+- **Open a Q&A discussion**: [GitHub Discussions](https://github.com/ghostty-org/ghostty/discussions/new?category=q-a)
+
+<Note>
+Maintainers and community members are happy to help, especially if you're learning. Don't be afraid to ask questions!
+</Note>
+
+## Resources
+
+- [Full Contributing Guide](https://github.com/ghostty-org/ghostty/blob/main/CONTRIBUTING.md) - Complete rules and guidelines
+- [HACKING.md](https://github.com/ghostty-org/ghostty/blob/main/HACKING.md) - Technical development guide
+- [AI Usage Policy](https://github.com/ghostty-org/ghostty/blob/main/AI_POLICY.md) - Detailed AI rules
+- [Translator's Guide](https://github.com/ghostty-org/ghostty/blob/main/po/README_TRANSLATORS.md) - Translation contributions
+- [GitHub Issues](https://github.com/ghostty-org/ghostty/issues) - Actionable work
+- [GitHub Discussions](https://github.com/ghostty-org/ghostty/discussions) - Community discussion
+- [Discord Server](https://discord.gg/ghostty) - Real-time community help
+
+## Thank You
+
+Thank you for contributing to Ghostty! Your contributions help make Ghostty better for everyone.
+
+<Note>
+Remember: quality over quantity. A single well-thought-out contribution is worth more than many rushed ones.
+</Note>

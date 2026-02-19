@@ -1,0 +1,406 @@
+---
+title: Appearance Configuration
+description: Configure colors, themes, and visual customization in Ghostty
+---
+
+## Colors
+
+### Basic Colors
+
+Set the fundamental terminal colors:
+
+```ini
+# Basic colors (hex format)
+background = #282C34
+foreground = #FFFFFF
+
+# Named X11 colors are also supported
+background = black
+foreground = white
+```
+
+<Note>
+Colors can be specified as:
+- Hex with hash: `#RRGGBB`
+- Hex without hash: `RRGGBB`
+- Named X11 colors: `black`, `white`, `red`, etc.
+</Note>
+
+### Terminal Color Palette
+
+Customize the 256-color palette:
+
+```ini
+# Set individual palette colors (0-255)
+palette = 0=#282C34   # Black
+palette = 1=#E06C75   # Red
+palette = 2=#98C379   # Green
+palette = 3=#E5C07B   # Yellow
+palette = 4=#61AFEF   # Blue
+palette = 5=#C678DD   # Magenta
+palette = 6=#56B6C2   # Cyan
+palette = 7=#ABB2BF   # White
+palette = 8=#5C6370   # Bright Black
+# ... more colors
+```
+
+<Accordion title="What palette indices should I set?">
+For most themes, you only need to set the first 16 colors (indices 0-15). Ghostty can automatically generate the extended palette (16-255) from these base colors.
+
+See the [256 colors cheat sheet](https://www.ditig.com/256-colors-cheat-sheet) for palette index definitions.
+</Accordion>
+
+<Accordion title="What is palette-generate?">
+When enabled (default since 1.3.0), Ghostty automatically generates palette colors 16-255 from your base 16 ANSI colors:
+
+```ini
+palette-generate = true  # Default
+```
+
+This creates a cohesive color scheme. Explicitly set colors via `palette` are never overwritten.
+</Accordion>
+
+### Palette Formats
+
+Palette indices can be specified in multiple number formats:
+
+```ini
+palette = 5=#C678DD      # Decimal (default)
+palette = 0b00000101=#C678DD  # Binary
+palette = 0o5=#C678DD    # Octal
+palette = 0x5=#C678DD    # Hexadecimal
+```
+
+## Themes
+
+### Using Themes
+
+Ghostty includes many built-in themes:
+
+```ini
+theme = rose-pine
+```
+
+List available themes:
+
+```bash
+ghostty +list-themes
+```
+
+### Theme Locations
+
+Themes are searched in this order:
+
+1. Absolute path (if specified)
+2. `$XDG_CONFIG_HOME/ghostty/themes/`
+3. Built-in themes directory
+
+```ini
+# Use built-in theme
+theme = dracula
+
+# Use custom theme by name
+theme = my-custom-theme
+
+# Use absolute path
+theme = /path/to/theme.conf
+```
+
+### Light and Dark Themes
+
+Specify different themes for light and dark mode:
+
+```ini
+theme = light:rose-pine-dawn,dark:rose-pine
+```
+
+<Info>
+Whitespace around values is trimmed. Order doesn't matter. Both light and dark must be specified.
+</Info>
+
+<Warning>
+**Known bugs** with light/dark mode:
+- **macOS**: Titlebar tabs style is not updated when switching themes
+</Warning>
+
+### Creating Custom Themes
+
+Theme files are just Ghostty config files:
+
+```ini
+# ~/.config/ghostty/themes/my-theme
+background = #1a1b26
+foreground = #c0caf5
+palette = 0=#15161e
+palette = 1=#f7768e
+# ... more settings
+```
+
+<Tip>
+Themes can set any configuration option, but built-in themes are audited to only set safe options. Only use themes from trusted sources!
+</Tip>
+
+## Cursor
+
+### Cursor Colors
+
+```ini
+# Set cursor color
+cursor-color = #528BFF
+
+# Set text color under cursor
+cursor-text = #FFFFFF
+
+# Special values (since 1.2.0)
+cursor-color = cell-foreground
+cursor-text = cell-background
+```
+
+### Cursor Style
+
+```ini
+# Cursor shape
+cursor-style = block       # block (default)
+cursor-style = bar         # vertical bar
+cursor-style = underline   # underline
+cursor-style = block_hollow  # hollow block
+```
+
+<Accordion title="Why does my cursor style change?">
+Shell integration automatically sets the cursor to a bar at the prompt. Disable this with:
+
+```ini
+shell-integration-features = no-cursor
+```
+
+Running programs can also request cursor styles via escape sequences (DECSCUSR).
+</Accordion>
+
+### Cursor Blinking
+
+```ini
+# Control cursor blinking
+cursor-style-blink = true   # Enable blinking
+cursor-style-blink = false  # Disable blinking
+# (blank/unset)              # Default: respect DEC Mode 12
+```
+
+### Cursor Opacity
+
+```ini
+# Cursor transparency (0.0 = transparent, 1.0 = opaque)
+cursor-opacity = 1.0
+```
+
+<Warning>
+Very low opacity values (e.g., 0.3) may make the cursor hard to find.
+</Warning>
+
+## Selection Colors
+
+```ini
+# Selection colors
+selection-foreground = #000000
+selection-background = #FFFACD
+
+# Use cell colors (since 1.2.0)
+selection-foreground = cell-foreground
+selection-background = cell-background
+```
+
+<Accordion title="How do I disable selection?">
+If not set, selection uses inverted window background/foreground colors (default behavior).
+</Accordion>
+
+## Background Customization
+
+### Background Opacity
+
+```ini
+# Transparency (0.0 = transparent, 1.0 = opaque)
+background-opacity = 0.9
+
+# Apply opacity to cells with explicit background colors
+background-opacity-cells = true
+```
+
+<Note>
+**macOS**: Background opacity is disabled in native fullscreen mode. Changing this requires restarting Ghostty.
+</Note>
+
+### Background Blur
+
+```ini
+# Enable blur with intensity
+background-blur = 20
+
+# Simple enable/disable
+background-blur = true   # Default intensity: 20
+background-blur = false  # No blur
+```
+
+<Tabs>
+  <Tab title="macOS">
+    macOS 26.0+ supports native glass effects:
+    
+    ```ini
+    background-blur = macos-glass-regular
+    background-blur = macos-glass-clear
+    ```
+  </Tab>
+  <Tab title="Linux">
+    Supported on KDE Plasma (Wayland and X11). The exact blur intensity is ignored on KDE - configure blur globally in System Settings.
+    
+    **Unsupported** on most other desktop environments. Users may need third-party plugins.
+  </Tab>
+</Tabs>
+
+### Background Image
+
+```ini
+# Set background image
+background-image = ~/wallpaper.png
+
+# Image opacity (relative to background-opacity)
+background-image-opacity = 1.0
+
+# Image position
+background-image-position = center  # center, top-left, top-center, etc.
+
+# Image fit
+background-image-fit = contain  # contain, cover, stretch, none
+
+# Repeat image
+background-image-repeat = false
+```
+
+<Warning>
+Background images are currently duplicated in VRAM per terminal, which can increase memory usage for large images.
+</Warning>
+
+<Accordion title="What image formats are supported?">
+Currently PNG and JPEG only. Other formats are not yet supported (as of 1.2.0).
+</Accordion>
+
+## Split and Window Styling
+
+### Unfocused Split Appearance
+
+```ini
+# Opacity of unfocused splits (0.15-1.0)
+unfocused-split-opacity = 0.7
+
+# Dim color overlay
+unfocused-split-fill = #000000
+```
+
+### Split Divider
+
+```ini
+# Split divider color (since 1.1.0)
+split-divider-color = #3E4451
+```
+
+## Color Space
+
+### Alpha Blending
+
+Control how colors are blended:
+
+```ini
+alpha-blending = native           # macOS: Display P3, Linux: sRGB
+alpha-blending = linear           # Linear space (prevents darkening)
+alpha-blending = linear-corrected # Linear with text correction (default on Linux)
+```
+
+<Accordion title="Which alpha blending should I use?">
+- **native**: Best default on macOS
+- **linear-corrected**: Best default on Linux - eliminates color fringing without affecting text weight
+- **linear**: Only if you want very thin/thick text rendering
+</Accordion>
+
+### Window Color Space
+
+```ini
+# Terminal color interpretation (macOS only)
+window-colorspace = srgb       # Default
+window-colorspace = display-p3 # Wide color gamut
+```
+
+## Window Theme
+
+Control the window chrome theme:
+
+```ini
+window-theme = auto    # Based on terminal background
+window-theme = system  # Follow system theme
+window-theme = light   # Always light
+window-theme = dark    # Always dark
+window-theme = ghostty # Use Ghostty config colors (Linux only)
+```
+
+<Note>
+On macOS with `macos-titlebar-style = tabs` or `transparent`, window theme is automatically set based on background luminosity.
+</Note>
+
+## Contrast
+
+Ensure readable text:
+
+```ini
+# Minimum contrast ratio (1-21, WCAG 2.0)
+minimum-contrast = 1     # No adjustment
+minimum-contrast = 1.1   # Avoid invisible text
+minimum-contrast = 3     # Readable text
+minimum-contrast = 7     # WCAG AA large text
+```
+
+<Tip>
+Higher values make text more readable but may change colors significantly (toward black/white).
+</Tip>
+
+## Advanced Visual Settings
+
+### Window Padding Color
+
+```ini
+window-padding-color = background     # Use background color
+window-padding-color = extend         # Extend cell background
+window-padding-color = extend-always  # Always extend (no heuristics)
+```
+
+<Accordion title="When does 'extend' disable?">
+On primary screen (not Vim, etc.), extending is disabled if:
+- Nearest row has default background cells
+- Nearest row is a prompt (requires shell integration)
+- Nearest row contains powerline characters
+</Accordion>
+
+### Search Colors
+
+```ini
+# Non-focused search matches
+search-foreground = #000000
+search-background = #FFE082
+
+# Currently selected search match
+search-selected-foreground = #000000
+search-selected-background = #F2A57E
+```
+
+## Color Resources
+
+<CardGroup cols={2}>
+  <Card title="256 Color Chart" icon="palette" href="https://www.ditig.com/256-colors-cheat-sheet">
+    Terminal color palette reference
+  </Card>
+  <Card title="X11 Color Names" icon="swatchbook" href="https://en.wikipedia.org/wiki/X11_color_names">
+    Named color reference
+  </Card>
+  <Card title="Built-in Themes" icon="brush" href="/guides/themes">
+    Browse included themes
+  </Card>
+  <Card title="WCAG Contrast" icon="universal-access" href="https://www.w3.org/TR/WCAG20/">
+    Accessibility guidelines
+  </Card>
+</CardGroup>

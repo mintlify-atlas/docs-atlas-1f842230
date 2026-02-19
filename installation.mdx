@@ -1,0 +1,507 @@
+---
+title: Installation
+description: Install Ghostty on macOS, Linux, or build from source
+---
+
+# Installing Ghostty
+
+Ghostty is available for macOS and Linux. Choose your platform below to get started.
+
+<Note>
+Ghostty requires modern system versions and specific dependencies. Make sure to review the requirements for your platform before installing.
+</Note>
+
+## Platform Installation
+
+<Tabs>
+  <Tab title="macOS">
+    ### macOS Installation
+
+    Ghostty is a native SwiftUI application for macOS with Metal rendering support.
+
+    #### Requirements
+
+    - macOS 13 (Ventura) or later
+    - Apple Silicon (M1/M2/M3) or Intel Mac
+
+    #### Download Official Release
+
+    The easiest way to install Ghostty is to download the official release:
+
+    <Card title="Download for macOS" icon="apple" href="https://ghostty.org/download">
+      Get the latest official release from the Ghostty website
+    </Card>
+
+    1. Download the `.dmg` file from the official website
+    2. Open the downloaded file
+    3. Drag Ghostty to your Applications folder
+    4. Launch Ghostty from Applications
+
+    <Warning>
+    On first launch, you may need to right-click and select "Open" to bypass Gatekeeper security warnings.
+    </Warning>
+
+    #### Install via Homebrew
+
+    <CodeGroup>
+    ```bash Homebrew Cask
+    # Install the latest release
+    brew install --cask ghostty
+    ```
+
+    ```bash Homebrew Formula (from source)
+    # Build from source via Homebrew
+    brew install ghostty
+    ```
+    </CodeGroup>
+
+    #### Install via MacPorts
+
+    ```bash
+    sudo port install ghostty
+    ```
+
+    #### Verify Installation
+
+    ```bash
+    # Check version
+    ghostty --version
+
+    # Launch Ghostty
+    open -a Ghostty
+    ```
+  </Tab>
+
+  <Tab title="Linux">
+    ### Linux Installation
+
+    Ghostty uses GTK for its Linux application interface with OpenGL rendering.
+
+    #### Requirements
+
+    - GTK 4 (version 4.12 or later recommended)
+    - libadwaita
+    - OpenGL support
+    - A relatively recent Linux distribution
+
+    #### Install via Package Manager
+
+    Ghostty is available in several Linux distribution repositories:
+
+    <CodeGroup>
+    ```bash Arch Linux (AUR)
+    # Using yay
+    yay -S ghostty
+
+    # Or using paru
+    paru -S ghostty
+
+    # Git version
+    yay -S ghostty-git
+    ```
+
+    ```bash Fedora
+    # Install from Copr
+    sudo dnf copr enable pgdev/ghostty
+    sudo dnf install ghostty
+    ```
+
+    ```bash Ubuntu/Debian
+    # Add PPA (if available) or build from source
+    # Check https://ghostty.org/download for latest packages
+    ```
+
+    ```bash Nix/NixOS
+    # Install with nix profile
+    nix profile install nixpkgs#ghostty
+
+    # Or add to configuration.nix
+    environment.systemPackages = [ pkgs.ghostty ];
+    ```
+
+    ```bash Flatpak
+    # Install from Flathub
+    flatpak install flathub org.mitchellh.ghostty
+
+    # Run Ghostty
+    flatpak run org.mitchellh.ghostty
+    ```
+    </CodeGroup>
+
+    <Info>
+    Package availability varies by distribution. Check the [official download page](https://ghostty.org/download) for the most up-to-date installation methods.
+    </Info>
+
+    #### Install from Binary
+
+    Download pre-built binaries from the releases page:
+
+    ```bash
+    # Download latest release
+    wget https://release.files.ghostty.org/<VERSION>/ghostty-<VERSION>.tar.gz
+
+    # Extract
+    tar -xzf ghostty-<VERSION>.tar.gz
+
+    # Install (requires sudo)
+    cd ghostty-<VERSION>
+    sudo cp bin/ghostty /usr/local/bin/
+    ```
+
+    #### Verify Installation
+
+    ```bash
+    # Check version
+    ghostty --version
+
+    # Launch Ghostty
+    ghostty
+    ```
+  </Tab>
+
+  <Tab title="FreeBSD">
+    ### FreeBSD Installation
+
+    Ghostty supports FreeBSD using the GTK application runtime.
+
+    #### Requirements
+
+    - FreeBSD 13 or later
+    - GTK 4 and libadwaita
+    - OpenGL support
+
+    #### Install via Ports
+
+    ```bash
+    # Install from ports
+    cd /usr/ports/x11/ghostty
+    make install clean
+    ```
+
+    #### Install via pkg
+
+    ```bash
+    # Install binary package
+    pkg install ghostty
+    ```
+
+    #### Build from Source
+
+    See the [Building from Source](/guides/building-from-source) guide for detailed instructions.
+  </Tab>
+</Tabs>
+
+## Building from Source
+
+Building Ghostty from source gives you the latest features and allows you to customize the build.
+
+<Warning>
+Building from source requires more technical knowledge and additional dependencies compared to binary installation.
+</Warning>
+
+### Prerequisites
+
+Ghostty requires specific versions of build tools:
+
+<CodeGroup>
+```bash Zig Compiler
+# Ghostty requires Zig 0.14.0 or later
+# Download from https://ziglang.org/download/
+
+# Verify installation
+zig version
+```
+
+```bash macOS Dependencies
+# Xcode 16 or later (for macOS 16 SDK)
+# Check Xcode version
+xcodebuild -version
+
+# Select correct Xcode
+sudo xcode-select --switch /Applications/Xcode.app
+```
+
+```bash Linux Dependencies (Debian/Ubuntu)
+# Install build dependencies
+sudo apt-get update
+sudo apt-get install -y \
+  libgtk-4-dev \
+  libadwaita-1-dev \
+  git \
+  pkg-config \
+  blueprint-compiler
+```
+
+```bash Linux Dependencies (Fedora)
+# Install build dependencies
+sudo dnf install -y \
+  gtk4-devel \
+  libadwaita-devel \
+  git \
+  pkg-config \
+  blueprint-compiler
+```
+
+```bash Linux Dependencies (Arch)
+# Install build dependencies
+sudo pacman -S \
+  gtk4 \
+  libadwaita \
+  git \
+  pkgconf \
+  blueprint-compiler
+```
+</CodeGroup>
+
+### Build Process
+
+<Steps>
+  <Step title="Clone the Repository">
+    ```bash
+    git clone https://github.com/ghostty-org/ghostty
+    cd ghostty
+    ```
+  </Step>
+
+  <Step title="Build Ghostty">
+    ```bash
+    # Debug build (default, faster compilation)
+    zig build
+
+    # Release build (optimized, recommended for daily use)
+    zig build -Doptimize=ReleaseFast
+    ```
+
+    <Tip>
+    The first build will download dependencies and may take several minutes.
+    </Tip>
+  </Step>
+
+  <Step title="Install (Optional)">
+    ```bash
+    # Install to /usr/local (requires sudo)
+    sudo zig build --prefix /usr/local -Doptimize=ReleaseFast
+
+    # Or install to custom location
+    zig build --prefix ~/.local -Doptimize=ReleaseFast
+    ```
+  </Step>
+
+  <Step title="Run Ghostty">
+    ```bash
+    # Run directly from build directory
+    zig build run
+
+    # Or run installed binary
+    ghostty
+    ```
+  </Step>
+</Steps>
+
+### Build Options
+
+Ghostty supports several build configurations:
+
+```bash
+# See all build options
+zig build --help
+
+# Common options:
+zig build -Doptimize=ReleaseFast     # Optimized release
+zig build -Doptimize=Debug            # Debug symbols
+zig build -Dcpu=baseline              # Generic CPU (no AVX)
+zig build test                        # Run unit tests
+zig build run                         # Build and run
+```
+
+<Info>
+For more detailed build instructions, see the [Building from Source Guide](/guides/building-from-source) and [HACKING.md](https://github.com/ghostty-org/ghostty/blob/main/HACKING.md).
+</Info>
+
+## Packaging for Distribution
+
+If you're packaging Ghostty for a Linux distribution:
+
+### Source Tarballs
+
+Official source tarballs with stable checksums are available:
+
+```bash
+# Download release tarball
+wget https://release.files.ghostty.org/<VERSION>/ghostty-<VERSION>.tar.gz
+wget https://release.files.ghostty.org/<VERSION>/ghostty-<VERSION>.tar.gz.minisig
+
+# Verify signature with minisign
+minisign -Vm ghostty-<VERSION>.tar.gz \
+  -P RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYcV
+```
+
+### Build for System Package
+
+```bash
+# Fetch dependencies offline
+ZIG_GLOBAL_CACHE_DIR=/tmp/offline-cache \
+  ./nix/build-support/fetch-zig-cache.sh
+
+# Build with system paths
+DESTDIR=/tmp/ghostty \
+zig build \
+  --prefix /usr \
+  --system /tmp/offline-cache/p \
+  -Doptimize=ReleaseFast \
+  -Dcpu=baseline
+```
+
+<Note>
+See [PACKAGING.md](https://github.com/ghostty-org/ghostty/blob/main/PACKAGING.md) for complete packaging guidelines.
+</Note>
+
+## Post-Installation
+
+After installing Ghostty:
+
+### Set as Default Terminal
+
+<Tabs>
+  <Tab title="macOS">
+    1. Open **System Settings** > **Privacy & Security**
+    2. Scroll to **Automation**
+    3. Enable Ghostty access if needed
+    4. Set Ghostty as default in **Terminal** preferences
+  </Tab>
+
+  <Tab title="Linux">
+    ```bash
+    # Set as default terminal emulator
+    sudo update-alternatives --install /usr/bin/x-terminal-emulator \
+      x-terminal-emulator $(which ghostty) 50
+
+    # Configure default
+    sudo update-alternatives --config x-terminal-emulator
+    ```
+  </Tab>
+</Tabs>
+
+### Create Configuration
+
+Create your first config file:
+
+```bash
+# Create config directory
+mkdir -p ~/.config/ghostty
+
+# Create config file
+touch ~/.config/ghostty/config
+
+# Edit with your favorite editor
+vi ~/.config/ghostty/config
+```
+
+Add some basic settings:
+
+```bash
+# ~/.config/ghostty/config
+font-family = "JetBrains Mono"
+font-size = 13
+theme = catppuccin-mocha
+```
+
+### Enable Shell Integration
+
+Set up shell integration for enhanced features:
+
+```bash
+# Bash - add to ~/.bashrc
+if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
+    source "$GHOSTTY_RESOURCES_DIR/shell-integration/bash/ghostty.bash"
+fi
+
+# Zsh - add to ~/.zshrc
+if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
+    source "$GHOSTTY_RESOURCES_DIR/shell-integration/zsh/ghostty.zsh"
+fi
+```
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="Ghostty won't start">
+    **Check dependencies:**
+    ```bash
+    # Linux - verify GTK installation
+    pkg-config --modversion gtk4
+    
+    # Should return >= 4.12.0
+    ```
+    
+    **Check logs:**
+    ```bash
+    # macOS
+    sudo log stream --level debug --predicate 'subsystem=="com.mitchellh.ghostty"'
+    
+    # Linux
+    journalctl --user --unit app-com.mitchellh.ghostty.service
+    ```
+  </Accordion>
+
+  <Accordion title="Build fails with Zig errors">
+    **Verify Zig version:**
+    ```bash
+    # Check required version in build.zig
+    grep required_zig build.zig
+    
+    # Your version
+    zig version
+    ```
+    
+    Ghostty requires exact Zig versions. Download the correct version from [ziglang.org](https://ziglang.org/download/).
+  </Accordion>
+
+  <Accordion title="Missing fonts after installation">
+    **Refresh font cache:**
+    ```bash
+    # Linux
+    fc-cache -fv
+    
+    # List available fonts
+    ghostty +list-fonts
+    ```
+  </Accordion>
+
+  <Accordion title="macOS: 'damaged' or 'unverified developer' error">
+    **Remove quarantine attribute:**
+    ```bash
+    xattr -cr /Applications/Ghostty.app
+    ```
+    
+    Or right-click Ghostty in Applications and select "Open".
+  </Accordion>
+</AccordionGroup>
+
+### Getting Help
+
+If you encounter issues:
+
+1. Check the [Troubleshooting Guide](/guides/troubleshooting)
+2. Search [existing issues](https://github.com/ghostty-org/ghostty/issues)
+3. Review [HACKING.md](https://github.com/ghostty-org/ghostty/blob/main/HACKING.md) for development setup
+4. Ask in [GitHub Discussions](https://github.com/ghostty-org/ghostty/discussions)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Learn the basics and configure your first setup
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/config/overview">
+    Explore all configuration options
+  </Card>
+  <Card title="Building from Source" icon="hammer" href="/guides/building-from-source">
+    Detailed guide for building Ghostty yourself
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/guides/contributing">
+    Help improve Ghostty
+  </Card>
+</CardGroup>

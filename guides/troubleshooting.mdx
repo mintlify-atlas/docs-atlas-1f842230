@@ -1,0 +1,484 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for Ghostty terminal emulator
+---
+
+This guide covers common issues you might encounter when using Ghostty and how to resolve them.
+
+## General Troubleshooting
+
+### Finding Logs
+
+Logs are essential for diagnosing issues. Ghostty writes logs to different locations depending on your platform and how it was launched.
+
+<Tabs>
+  <Tab title="macOS">
+    Ghostty logs to the macOS unified log system by default.
+
+    **View logs in real-time:**
+    ```bash
+    sudo log stream --level debug --predicate 'subsystem=="com.mitchellh.ghostty"'
+    ```
+
+    **View recent logs:**
+    ```bash
+    log show --predicate 'subsystem=="com.mitchellh.ghostty"' --last 1h
+    ```
+  </Tab>
+  <Tab title="Linux">
+    **If launched by systemd:**
+    ```bash
+    journalctl --user --unit app-com.mitchellh.ghostty.service
+    ```
+
+    **If launched manually:**
+    Logs are written to `stderr`. Run from a terminal to see logs:
+    ```bash
+    ghostty
+    ```
+  </Tab>
+</Tabs>
+
+### Enabling Debug Logging
+
+Set the `GHOSTTY_LOG` environment variable to control logging:
+
+```bash
+# Enable all logging destinations
+GHOSTTY_LOG=true ghostty
+
+# Enable stderr logging
+GHOSTTY_LOG=stderr ghostty
+
+# Enable macOS unified log (macOS only)
+GHOSTTY_LOG=macos ghostty
+
+# Combine multiple destinations
+GHOSTTY_LOG=stderr,macos ghostty
+```
+
+### Crash Reports
+
+Ghostty has a built-in crash reporter that saves crash reports to disk.
+
+**Crash report location:**
+- `$XDG_STATE_HOME/ghostty/crash` (if `$XDG_STATE_HOME` is set)
+- `~/.local/state/ghostty/crash` (default)
+
+**List crash reports:**
+```bash
+ghostty +crash-report
+```
+
+<Warning>
+Crash reports are generated **the next time Ghostty starts** after a crash. You must restart Ghostty at least once to generate a crash report.
+</Warning>
+
+<Note>
+Crash reports can contain sensitive information from stack memory. Review before sharing publicly.
+</Note>
+
+## Common Issues
+
+<Accordion title="Ghostty won't start or crashes immediately">
+  **Steps to diagnose:**
+
+  1. **Check logs** for error messages (see [Finding Logs](#finding-logs))
+
+  2. **Try safe mode** by disabling your config:
+     ```bash
+     ghostty --config-file=/dev/null
+     ```
+
+  3. **Check GPU compatibility:**
+     - Ghostty uses Metal on macOS and OpenGL on Linux
+     - Update graphics drivers
+     - Try disabling GPU acceleration in config:
+       ```
+       # Add to config file
+       renderer = software
+       ```
+
+  4. **Verify installation:**
+     ```bash
+     which ghostty
+     ghostty --version
+     ```
+
+  5. **Check crash reports:**
+     ```bash
+     ghostty +crash-report
+     ```
+</Accordion>
+
+<Accordion title="Fonts not rendering correctly">
+  **Common font issues:**
+
+  - **Font not found**: Verify the font is installed
+    ```bash
+    # List available fonts (macOS)
+    fc-list : family | sort | uniq
+    ```
+
+  - **Wrong font being used**: Check config file syntax
+    ```
+    font-family = "JetBrains Mono"
+    font-size = 14
+    ```
+
+  - **Font looks blurry**: Try adjusting font hinting
+    ```
+    font-hinting = full
+    ```
+
+  - **Ligatures not working**: Enable font features
+    ```
+    font-feature = +calt
+    font-feature = +liga
+    ```
+
+  - **Emoji not displaying**: Ensure an emoji font is available
+    ```
+    # macOS usually has Apple Color Emoji by default
+    # Linux may need:
+    sudo apt install fonts-noto-color-emoji
+    ```
+</Accordion>
+
+<Accordion title="Configuration file not loading">
+  **Check config file location:**
+
+  Ghostty looks for config files in this order:
+  1. `$XDG_CONFIG_HOME/ghostty/config` (if `$XDG_CONFIG_HOME` is set)
+  2. `~/.config/ghostty/config` (Linux/macOS default)
+  3. `~/Library/Application Support/com.mitchellh.ghostty/config` (macOS app)
+
+  **Verify syntax:**
+  ```bash
+  # Run with explicit config file
+  ghostty --config-file=/path/to/config
+  ```
+
+  **Common syntax errors:**
+  - No quotes around values with spaces: `font-family = "Fira Code"`
+  - Incorrect option names (check documentation)
+  - Comments must start with `#`
+
+  **Test with minimal config:**
+  ```
+  # Minimal config for testing
+  font-family = monospace
+  font-size = 12
+  ```
+</Accordion>
+
+<Accordion title="Colors look wrong or theme not working">
+  **Check color configuration:**
+
+  1. **Verify theme file location:**
+     - Themes should be in `~/.config/ghostty/themes/`
+
+  2. **Check theme syntax:**
+     ```
+     # In config file
+     theme = my-theme
+     ```
+
+  3. **Test with explicit colors:**
+     ```
+     background = 000000
+     foreground = ffffff
+     ```
+
+  4. **Check terminal TERM value:**
+     ```bash
+     echo $TERM
+     # Should be: xterm-ghostty or xterm-256color
+     ```
+
+  5. **True color support:**
+     ```bash
+     # Test true color
+     awk 'BEGIN{
+         s="/\\-"; s=s s s s s s s s;
+         for (colnum = 0; colnum<77; colnum++) {
+             r = 255-(colnum*255/76);
+             g = (colnum*510/76);
+             b = (colnum*255/76);
+             if (g>255) g = 510-g;
+             printf "\033[48;2;%d;%d;%dm", r,g,b;
+             printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b;
+             printf "%s\033[0m", substr(s,colnum+1,1);
+         }
+         printf "\n";
+     }'
+     ```
+</Accordion>
+
+<Accordion title="Performance issues or lag">
+  **Optimization steps:**
+
+  1. **Check GPU acceleration:**
+     - Ensure GPU drivers are up to date
+     - Verify Ghostty is using GPU:
+       ```bash
+       GHOSTTY_LOG=true ghostty 2>&1 | grep -i render
+       ```
+
+  2. **Disable expensive features:**
+     ```
+     # Disable ligatures
+     font-feature = -calt
+     font-feature = -liga
+
+     # Reduce background opacity
+     background-opacity = 1.0
+
+     # Disable blur
+     background-blur-radius = 0
+     ```
+
+  3. **Check scrollback buffer size:**
+     ```
+     # Reduce if very large
+     scrollback-limit = 10000
+     ```
+
+  4. **Monitor resource usage:**
+     ```bash
+     # macOS
+     top -pid $(pgrep ghostty)
+
+     # Linux
+     htop -p $(pgrep ghostty)
+     ```
+
+  5. **Test with clean config:**
+     ```bash
+     ghostty --config-file=/dev/null
+     ```
+</Accordion>
+
+<Accordion title="Keybindings not working">
+  **Debugging keybindings:**
+
+  1. **Check for conflicts:**
+     - System keybindings may override Ghostty
+     - Desktop environment shortcuts
+     - Terminal multiplexer keybindings (tmux, screen)
+
+  2. **Test keybinding syntax:**
+     ```
+     # Format: modifier+key=action
+     keybind = ctrl+shift+c=copy_to_clipboard
+     keybind = ctrl+shift+v=paste_from_clipboard
+     ```
+
+  3. **Clear conflicting bindings:**
+     ```
+     # Unbind a key
+     keybind = ctrl+shift+c=unbind
+     ```
+
+  4. **Check logs for keybinding errors:**
+     ```bash
+     GHOSTTY_LOG=stderr ghostty 2>&1 | grep -i keybind
+     ```
+</Accordion>
+
+<Accordion title="Copy/paste not working">
+  **Platform-specific solutions:**
+
+  <Tabs>
+    <Tab title="Linux">
+      **Wayland:**
+      - Ensure `wl-clipboard` is installed:
+        ```bash
+        sudo apt install wl-clipboard
+        ```
+
+      **X11:**
+      - Ensure `xclip` or `xsel` is installed:
+        ```bash
+        sudo apt install xclip
+        ```
+
+      **Config:**
+      ```
+      keybind = ctrl+shift+c=copy_to_clipboard
+      keybind = ctrl+shift+v=paste_from_clipboard
+      ```
+    </Tab>
+    <Tab title="macOS">
+      Copy/paste should work out of the box with standard macOS shortcuts:
+      - `Cmd+C` to copy
+      - `Cmd+V` to paste
+
+      If not working, check:
+      1. macOS permissions for Ghostty
+      2. Conflicting keybinding managers
+      3. Accessibility permissions in System Settings
+    </Tab>
+  </Tabs>
+</Accordion>
+
+<Accordion title="Shell integration not working">
+  **Enable shell integration:**
+
+  Shell integration provides features like:
+  - Jump between prompts
+  - Semantic prompt detection
+  - Command history integration
+
+  **Installation:**
+  ```bash
+  # Bash
+  echo 'eval "$(ghostty +shell-integration bash)"' >> ~/.bashrc
+
+  # Zsh
+  echo 'eval "$(ghostty +shell-integration zsh)"' >> ~/.zshrc
+
+  # Fish
+  ghostty +shell-integration fish | source
+  echo 'ghostty +shell-integration fish | source' >> ~/.config/fish/config.fish
+  ```
+
+  **Verify installation:**
+  ```bash
+  # Check if GHOSTTY environment variable is set
+  echo $GHOSTTY
+  ```
+
+  **Troubleshooting:**
+  - Restart your shell after adding integration
+  - Check shell integration is enabled in config:
+    ```
+    shell-integration = true
+    ```
+  - Verify resource directory:
+    ```bash
+    ghostty +show-config | grep resource
+    ```
+</Accordion>
+
+<Accordion title="IME (Input Method Editor) issues on Linux">
+  **Common IME issues:**
+
+  Ghostty supports multiple IME systems on Linux:
+  - ibus
+  - fcitx
+  - Wayland and X11
+
+  **Verify IME environment:**
+  ```bash
+  echo $GTK_IM_MODULE
+  echo $QT_IM_MODULE
+  echo $XMODIFIERS
+  ```
+
+  **Test dead keys:**
+  1. Set keyboard to Spanish or similar layout
+  2. Press `'` then `a` - should produce `á`
+
+  **Test CJK input:**
+  1. Enable Japanese/Chinese input method
+  2. Type text and verify preedit display
+  3. Press Enter to commit
+
+  **Known issues:**
+  - ibus versions 1.5.29, 1.5.30, 1.5.31 may exhibit different behaviors
+  - Some IME features may work differently on Wayland vs X11
+</Accordion>
+
+## Platform-Specific Issues
+
+### macOS
+
+<Accordion title="Ghostty not appearing in Applications folder">
+  If you installed via Homebrew:
+
+  ```bash
+  brew install ghostty
+  # App should be in /Applications/Ghostty.app
+  ```
+
+  If building from source, the app bundle is in:
+  ```
+  zig-out/Ghostty.app
+  ```
+</Accordion>
+
+<Accordion title="Permission or security warnings">
+  macOS may block unsigned apps. To allow Ghostty:
+
+  1. Open System Settings
+  2. Go to Privacy & Security
+  3. Look for message about Ghostty being blocked
+  4. Click "Open Anyway"
+
+  Or via command line:
+  ```bash
+  xattr -cr /Applications/Ghostty.app
+  ```
+</Accordion>
+
+### Linux
+
+<Accordion title="Ghostty not launching from desktop environment">
+  **Check desktop entry:**
+  ```bash
+  cat ~/.local/share/applications/com.mitchellh.ghostty.desktop
+  ```
+
+  **Verify Ghostty is in PATH:**
+  ```bash
+  which ghostty
+  ```
+
+  **Test launch from terminal:**
+  ```bash
+  gtk-launch com.mitchellh.ghostty
+  ```
+</Accordion>
+
+<Accordion title="Wayland or X11 issues">
+  **Force X11 backend (if using Wayland):**
+  ```bash
+  GDK_BACKEND=x11 ghostty
+  ```
+
+  **Force Wayland backend:**
+  ```bash
+  GDK_BACKEND=wayland ghostty
+  ```
+
+  **Check current session:**
+  ```bash
+  echo $XDG_SESSION_TYPE
+  ```
+</Accordion>
+
+## Getting Help
+
+If you're still experiencing issues:
+
+1. **Search existing issues**: [GitHub Issues](https://github.com/ghostty-org/ghostty/issues)
+2. **Check discussions**: [GitHub Discussions](https://github.com/ghostty-org/ghostty/discussions)
+3. **Join Discord**: [Ghostty Discord Server](https://discord.gg/ghostty)
+4. **Open an issue triage discussion**: Use the [Issue Triage template](https://github.com/ghostty-org/ghostty/discussions/new?category=issue-triage)
+
+<Warning>
+When reporting issues, always include:
+- Ghostty version (`ghostty --version`)
+- Operating system and version
+- Config file contents (if relevant)
+- Steps to reproduce
+- Relevant log output
+</Warning>
+
+## Related Resources
+
+- [Configuration Reference](/docs/config)
+- [Building from Source](/guides/building-from-source)
+- [Contributing Guide](/guides/contributing)
+- [GitHub Repository](https://github.com/ghostty-org/ghostty)

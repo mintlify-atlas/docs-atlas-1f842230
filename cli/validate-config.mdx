@@ -1,0 +1,239 @@
+---
+title: validate-config
+description: Validate a Ghostty configuration file for errors
+---
+
+The `validate-config` command checks a Ghostty configuration file for syntax errors, invalid options, and configuration problems.
+
+## Usage
+
+```bash
+ghostty +validate-config [options]
+```
+
+## Description
+
+This command validates a Ghostty configuration file without launching the terminal. It reports any errors, warnings, or issues found in the configuration. 
+
+When executed without arguments, it validates the configuration from the default location (`$XDG_CONFIG_HOME/ghostty/config` or equivalent for your platform).
+
+The command exits with code 0 if validation succeeds and code 1 if any problems are found.
+
+## Options
+
+<ParamField path="--config-file" type="string">
+  Path to a specific configuration file to validate. If not specified, validates the default configuration file location.
+  
+  The path can be absolute or relative to the current directory.
+</ParamField>
+
+<ParamField path="-h, --help" type="flag">
+  Display help information for this command.
+</ParamField>
+
+## Examples
+
+### Validate Default Configuration
+
+```bash
+ghostty +validate-config
+```
+
+<CodeGroup>
+```text Success Output
+(no output - exit code 0)
+```
+
+```text Error Output
+config:12: unknown configuration key: "font-famly"
+config:18: invalid value for "font-size": must be a positive number
+```
+</CodeGroup>
+
+### Validate Specific File
+
+```bash
+ghostty +validate-config --config-file=./test-config.txt
+```
+
+Validates a configuration file in the current directory.
+
+### Validate Absolute Path
+
+```bash
+ghostty +validate-config --config-file=/etc/ghostty/config
+```
+
+Validates a configuration file at an absolute path.
+
+### Check Exit Code
+
+```bash
+ghostty +validate-config
+if [ $? -eq 0 ]; then
+  echo "Configuration is valid"
+else
+  echo "Configuration has errors"
+fi
+```
+
+<CodeGroup>
+```bash Shell Script
+#!/bin/bash
+
+# Validate before using config
+if ghostty +validate-config --config-file="$1"; then
+    echo "✓ Configuration valid"
+    cp "$1" ~/.config/ghostty/config
+else
+    echo "✗ Configuration invalid - not applying"
+    exit 1
+fi
+```
+</CodeGroup>
+
+### Validate in CI/CD
+
+```yaml GitHub Actions
+name: Validate Ghostty Config
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Ghostty
+        run: |
+          # Install ghostty...
+      - name: Validate Config
+        run: ghostty +validate-config --config-file=.ghostty
+```
+
+## Common Validation Errors
+
+### Unknown Configuration Key
+
+```text Error
+config:5: unknown configuration key: "fond-family"
+```
+
+**Cause**: Typo in option name  
+**Fix**: Correct the option name (should be `font-family`)
+
+### Invalid Value Type
+
+```text Error
+config:12: invalid value for "font-size": must be a positive number
+```
+
+**Cause**: Wrong type for option value  
+**Fix**: Ensure the value matches the expected type
+
+### Invalid Enum Value
+
+```text Error
+config:20: invalid value for "cursor-style": must be one of: block, bar, underline
+```
+
+**Cause**: Invalid choice for enum option  
+**Fix**: Use one of the valid values listed
+
+### Syntax Error
+
+```text Error
+config:8: syntax error: expected '=' after key
+```
+
+**Cause**: Malformed configuration line  
+**Fix**: Ensure proper `key = value` format
+
+### Theme Not Found
+
+```text Error
+config:3: theme "my-theme" not found
+```
+
+**Cause**: Referenced theme doesn't exist  
+**Fix**: Use `ghostty +list-themes` to find available themes
+
+### Font Not Found
+
+```text Warning
+config:6: font family "MyFont" not found on system
+```
+
+**Cause**: Specified font not available  
+**Fix**: Use `ghostty +list-fonts` to find available fonts
+
+## Validation Checks
+
+The validator checks for:
+
+- **Syntax errors**: Malformed configuration lines
+- **Unknown keys**: Option names that don't exist
+- **Type errors**: Values that don't match the expected type
+- **Range errors**: Numeric values outside valid ranges
+- **Enum errors**: Invalid choices for option values
+- **File references**: Missing theme or font files
+- **Keybind errors**: Invalid keybinding syntax
+- **Conditional errors**: Malformed conditional configuration
+
+## Use Cases
+
+### Pre-Deployment Validation
+
+```bash
+ghostty +validate-config && \
+  cp config ~/.config/ghostty/config && \
+  echo "Config deployed successfully"
+```
+
+### Editor Integration
+
+Configure your editor to run validation on save:
+
+```vim .vimrc
+autocmd BufWritePost *config.ghostty !ghostty +validate-config --config-file=%
+```
+
+### Configuration Management
+
+```bash Script
+#!/bin/bash
+for config in configs/*.ghostty; do
+    echo "Validating $config..."
+    if ghostty +validate-config --config-file="$config"; then
+        echo "  ✓ Valid"
+    else
+        echo "  ✗ Invalid"
+        exit 1
+    fi
+done
+```
+
+## Notes
+
+<Note>
+  Validation includes checking for recursive file inclusions and evaluating conditional configuration, so the validation represents the actual configuration that would be loaded.
+</Note>
+
+<Note>
+  Some warnings (like missing fonts) won't prevent the configuration from loading, but will cause Ghostty to fall back to defaults. These still appear in validation output.
+</Note>
+
+<Note>
+  The validator resolves relative paths based on the configuration file's location, just like Ghostty does when loading the config.
+</Note>
+
+## Exit Codes
+
+- `0` - Configuration is valid (no errors)
+- `1` - Configuration has errors or warnings
+
+## See Also
+
+- [show-config](/cli/show-config) - Display current configuration
+- [edit-config](/cli/edit-config) - Open config in editor
+- [Configuration Reference](/config/reference)

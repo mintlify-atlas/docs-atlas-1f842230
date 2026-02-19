@@ -1,0 +1,288 @@
+---
+title: Building from Source
+description: Learn how to build Ghostty from source code on macOS and Linux
+---
+
+This guide explains how to build Ghostty from source. Building from source is useful for contributing to development, testing new features, or creating custom builds.
+
+<Note>
+Building from a Git checkout may require [extra dependencies](#extra-dependencies) compared to building from a source tarball. Tip versions may also require different versions of Zig or other toolchains.
+</Note>
+
+## Prerequisites
+
+### All Platforms
+
+- **Zig** - Ghostty requires a specific version of Zig (check `build.zig.zon` for the minimum version)
+- **Git** - To clone the repository
+
+### Platform-Specific Requirements
+
+<Tabs>
+  <Tab title="macOS">
+    **Required:**
+    - Xcode 26 and macOS 26 SDK
+    - iOS SDK
+    - Metal Toolchain
+
+    <Warning>
+    Main branch development requires **Xcode 26 and the macOS 26 SDK**. You do not need to be running macOS 26 to build Ghostty - you can use Xcode 26 on macOS 15 stable.
+    </Warning>
+
+    Ensure the correct version of Xcode is selected:
+
+    ```bash
+    sudo xcode-select --switch /Applications/Xcode.app
+    ```
+  </Tab>
+  <Tab title="Linux">
+    **Required:**
+    - `blueprint-compiler` (version 0.16.0 or newer)
+    - GTK development libraries
+
+    **Ubuntu/Debian:**
+    ```bash
+    sudo apt install blueprint-compiler libgtk-4-dev
+    ```
+
+    **Fedora:**
+    ```bash
+    sudo dnf install blueprint-compiler gtk4-devel
+    ```
+
+    **Arch Linux:**
+    ```bash
+    sudo pacman -S blueprint-compiler gtk4
+    ```
+  </Tab>
+</Tabs>
+
+## Building Ghostty
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/ghostty-org/ghostty
+    cd ghostty
+    ```
+  </Step>
+
+  <Step title="Build the project">
+    <Tabs>
+      <Tab title="Debug Build (Default)">
+        Build a debug version for development:
+
+        ```bash
+        zig build
+        ```
+
+        Debug builds include more logging and make diagnosing issues easier. This is the default and does not require any `-Doptimize` flags.
+      </Tab>
+      <Tab title="Release Build">
+        Build an optimized release version:
+
+        ```bash
+        zig build -Doptimize=ReleaseFast
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Run Ghostty">
+    ```bash
+    zig build run
+    ```
+
+    You can pass additional arguments after `--`:
+
+    ```bash
+    zig build run -- --config-file=/path/to/config
+    ```
+  </Step>
+</Steps>
+
+## Common Build Commands
+
+| Command | Description |
+|---------|-------------|
+| `zig build` | Builds Ghostty (debug mode by default) |
+| `zig build run` | Builds and runs Ghostty |
+| `zig build test` | Runs unit tests |
+| `zig build test -Dtest-filter=<filter>` | Runs tests matching the filter |
+| `zig build run-valgrind` | Runs Ghostty under Valgrind (memory leak checking) |
+| `zig build update-translations` | Updates translation strings |
+| `zig build dist` | Builds a source tarball |
+| `zig build distcheck` | Builds and validates a source tarball |
+| `zig build lib-vt` | Builds libghostty-vt |
+
+## Building libghostty-vt
+
+Ghostty provides `libghostty-vt`, a C-compatible library for parsing terminal sequences:
+
+```bash
+zig build lib-vt
+```
+
+This library is available for Zig and C and compatible with macOS, Linux, Windows, and WebAssembly.
+
+## Development Tips
+
+### Running Tests
+
+Run all tests:
+```bash
+zig build test
+```
+
+Run specific tests:
+```bash
+zig build test -Dtest-filter=terminal
+```
+
+Run libghostty-vt tests:
+```bash
+zig build test-lib-vt
+```
+
+### Checking for Memory Leaks
+
+On Linux, use Valgrind to check for memory leaks:
+
+```bash
+zig build run-valgrind
+```
+
+This builds Ghostty with Valgrind support and runs it with proper flags to suppress known false positives. You can pass the same arguments as `zig build run`.
+
+### Code Formatting
+
+**Zig code:**
+```bash
+zig fmt .
+```
+
+**Other files (Markdown, JSON, etc.):**
+```bash
+prettier --write .
+```
+
+Make sure your Prettier version matches the version in `nix/devShell.nix`.
+
+**Nix files (if applicable):**
+```bash
+alejandra .
+```
+
+### Logging
+
+Ghostty's logging behavior depends on optimization level and environment variables:
+
+- **Debug builds** output debug logs to `stderr`
+- **Release builds** do not output debug logs to `stderr`
+
+Control logging destinations with `GHOSTTY_LOG`:
+
+```bash
+# Enable all logging destinations
+GHOSTTY_LOG=true zig build run
+
+# Enable stderr only
+GHOSTTY_LOG=stderr zig build run
+
+# Enable macOS unified log (macOS only)
+GHOSTTY_LOG=macos zig build run
+
+# Disable specific destinations
+GHOSTTY_LOG=no-stderr zig build run
+```
+
+**View logs on macOS:**
+```bash
+sudo log stream --level debug --predicate 'subsystem=="com.mitchellh.ghostty"'
+```
+
+**View logs on Linux (systemd):**
+```bash
+journalctl --user --unit app-com.mitchellh.ghostty.service
+```
+
+## Nix Support
+
+Ghostty provides Nix flake support for NixOS and Nix users:
+
+### Development Shell
+
+```bash
+nix develop
+```
+
+### Build with Nix
+
+```bash
+nix build
+```
+
+### Testing VMs
+
+Run test VMs for different desktop environments:
+
+```bash
+nix run .#gnome-vm
+```
+
+Available VMs are defined in the `nix/vm` directory.
+
+## Troubleshooting Build Issues
+
+<Accordion title="Xcode version or SDK not found (macOS)">
+  Ensure Xcode 26 is installed and selected:
+
+  ```bash
+  xcode-select -p
+  sudo xcode-select --switch /Applications/Xcode.app
+  ```
+
+  Verify the SDK is available:
+  ```bash
+  xcrun --show-sdk-path
+  ```
+</Accordion>
+
+<Accordion title="blueprint-compiler not found (Linux)">
+  Install blueprint-compiler version 0.16.0 or newer:
+
+  ```bash
+  # Ubuntu/Debian
+  sudo apt install blueprint-compiler
+
+  # Fedora
+  sudo dnf install blueprint-compiler
+
+  # Arch
+  sudo pacman -S blueprint-compiler
+  ```
+</Accordion>
+
+<Accordion title="Zig version mismatch">
+  Check the required Zig version in `build.zig.zon` and ensure your installed version meets the minimum requirement:
+
+  ```bash
+  zig version
+  ```
+
+  Download the correct version from [ziglang.org](https://ziglang.org/download/).
+</Accordion>
+
+<Accordion title="Build fails with 'out of memory' error">
+  Zig can be memory-intensive during compilation. Try:
+
+  1. Close other applications
+  2. Build with release optimizations: `zig build -Doptimize=ReleaseFast`
+  3. Increase system swap space
+</Accordion>
+
+## Next Steps
+
+- Read the [Contributing Guide](/guides/contributing) to learn about the contribution process
+- Check [Troubleshooting](/guides/troubleshooting) for runtime issues
+- See [HACKING.md](https://github.com/ghostty-org/ghostty/blob/main/HACKING.md) for detailed development information

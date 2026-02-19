@@ -1,0 +1,73 @@
+---
+title: CLI Reference Overview
+description: Overview of Ghostty's command-line interface and available commands
+---
+
+Ghostty provides a powerful command-line interface for managing configurations, listing resources, and performing various operations without launching the terminal emulator.
+
+## Usage Pattern
+
+CLI commands are invoked using the `+<command>` syntax:
+
+```bash
+ghostty +<command> [options]
+```
+
+For example:
+
+```bash
+ghostty +list-fonts
+ghostty +show-config --default
+ghostty +validate-config --config-file=custom.conf
+```
+
+## Available Commands
+
+<CardGroup cols={2}>
+  <Card title="list-fonts" icon="font" href="/cli/list-fonts">
+    List all available fonts using Ghostty's font discovery mechanism
+  </Card>
+  
+  <Card title="list-themes" icon="palette" href="/cli/list-themes">
+    Preview or list all available themes for Ghostty
+  </Card>
+  
+  <Card title="list-keybinds" icon="keyboard" href="/cli/list-keybinds">
+    Display all configured or default keybindings
+  </Card>
+  
+  <Card title="list-actions" icon="list" href="/cli/list-actions">
+    List all available keybind actions
+  </Card>
+  
+  <Card title="show-config" icon="file-code" href="/cli/show-config">
+    Display the current configuration in valid config file format
+  </Card>
+  
+  <Card title="validate-config" icon="check-circle" href="/cli/validate-config">
+    Validate a Ghostty configuration file
+  </Card>
+  
+  <Card title="edit-config" icon="edit" href="/cli/edit-config">
+    Open the configuration file in your default editor
+  </Card>
+  
+  <Card title="ssh-cache" icon="server" href="/cli/ssh-cache">
+    Manage the SSH terminfo cache for remote host setup
+  </Card>
+</CardGroup>
+
+## Common Options
+
+Most commands support these options:
+
+- `-h`, `--help` - Display help information for the command
+- `--version` - Display Ghostty version information
+
+## Exit Codes
+
+CLI commands follow standard Unix conventions:
+
+- `0` - Success
+- `1` - Error or validation failure
+- Other non-zero values may indicate specific error conditions

@@ -1,0 +1,522 @@
+---
+title: Keybindings Configuration
+description: Customize keyboard shortcuts and key sequences in Ghostty
+---
+
+## Basic Keybinding Syntax
+
+Keybindings use the format `trigger=action`:
+
+```ini
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+keybind = ctrl+shift+n=new_window
+```
+
+List all actions:
+
+```bash
+ghostty +list-actions
+```
+
+Show active keybinds:
+
+```bash
+ghostty +list-keybinds
+```
+
+## Trigger Syntax
+
+Triggers are `+`-separated keys and modifiers:
+
+```ini
+keybind = ctrl+a=action
+keybind = ctrl+shift+b=action
+keybind = super+enter=action
+```
+
+### Valid Modifiers
+
+| Modifier | Aliases | Description |
+|----------|---------|-------------|
+| `shift` | - | Shift key |
+| `ctrl` | `control` | Control key |
+| `alt` | `opt`, `option` | Alt/Option key |
+| `super` | `cmd`, `command` | Super/Command/Windows key |
+
+<Note>
+The `fn` or "globe" key is **not supported** as a modifier (OS/toolkit limitation).
+</Note>
+
+### Key Specifications
+
+#### Unicode Codepoints
+
+Keys can be Unicode characters:
+
+```ini
+keybind = ctrl+a=action       # Matches 'a' key
+keybind = ctrl+A=action       # Same as above (case-insensitive)
+keybind = ctrl+ñ=action       # Matches 'ñ' on Spanish keyboard
+```
+
+<Info>
+Codepoint matching is **layout-aware**. `ctrl+a` matches the key that produces 'a' on your keyboard layout.
+</Info>
+
+<Warning>
+Some combinations are impossible depending on keyboard layout. For example, `ctrl+_` is impossible on US keyboards because `_` requires Shift, making it `ctrl+shift+-`, not `ctrl+_`.
+
+See [Qt keyboard layout documentation](https://doc.qt.io/qt-6/qkeysequence.html#keyboard-layout-issues) for details.
+</Warning>
+
+#### Physical Key Codes
+
+Use [W3C key codes](https://www.w3.org/TR/uievents-code/) for layout-independent binding:
+
+```ini
+keybind = KeyA=action         # Physical 'A' key (US layout)
+keybind = Digit1=action       # Physical '1' key
+keybind = BracketLeft=action  # Physical '[' key
+```
+
+<Tip>
+Physical keys also support snake_case: `key_a` equals `KeyA`, `bracket_left` equals `BracketLeft`.
+
+Exception: Function keys use lowercase without underscore: `f1`, `f2`, etc.
+</Tip>
+
+#### Function Keys
+
+```ini
+keybind = f1=action
+keybind = f12=action
+keybind = insert=action
+keybind = up=action
+keybind = page_up=action
+```
+
+### Priority Rules
+
+<Info>
+Physical keys have **higher priority** than Unicode codepoints. If you bind both `a` and `KeyA`, the physical key binding always wins.
+</Info>
+
+### Special Keys
+
+#### Catch-All Key
+
+Match any unbound key:
+
+```ini
+keybind = catch_all=ignore              # Ignore all unbound keys
+keybind = ctrl+catch_all=ignore         # Ignore all unbound ctrl+key
+keybind = super+catch_all=new_window    # Super+anything opens window
+```
+
+<Accordion title="How does catch_all lookup work?">
+1. Try to match `catch_all` **with modifiers** first
+2. If no match and event has modifiers, fall back to `catch_all` **without modifiers**
+</Accordion>
+
+## Actions
+
+### Action Format
+
+Actions can have optional parameters:
+
+```ini
+keybind = up=action               # No parameter
+keybind = up=action:parameter     # With parameter
+keybind = up=text:Hello World     # Text parameter
+```
+
+### Common Actions
+
+#### Text Input
+
+```ini
+keybind = ctrl+u=text:\x15        # Send Ctrl-U
+keybind = f1=text:ls -la\n        # Send "ls -la" + Enter
+```
+
+<Note>
+Text uses Zig string literal syntax. Common escapes: `\n` (newline), `\t` (tab), `\xHH` (hex byte).
+</Note>
+
+#### Terminal Sequences
+
+```ini
+keybind = up=csi:A                # Cursor up
+keybind = ctrl+d=esc:d            # Delete word right
+```
+
+#### Special Actions
+
+```ini
+keybind = ctrl+a=ignore           # Do nothing
+keybind = ctrl+b=unbind           # Remove this binding
+```
+
+<Accordion title="What does unbind do?">
+`unbind` removes the binding and allows the key to pass through to the terminal application if printable. It removes **any** matching trigger, including `physical:`-prefixed ones.
+</Accordion>
+
+### Action Parameters
+
+<Warning>
+Parameters are taken **as-is** after the `:`. If you need spaces, wrap the entire keybind in quotes:
+
+```ini
+keybind = "up=csi:A B"    # Parameter is "A B"
+```
+</Warning>
+
+## Keybind Prefixes
+
+Prefixes modify keybind behavior:
+
+### Global Keybinds
+
+```ini
+keybind = global:ctrl+space=toggle_quick_terminal
+```
+
+Works system-wide, even when Ghostty isn't focused.
+
+<Tabs>
+  <Tab title="macOS">
+    Requires **Accessibility permissions**. Ghostty will request these when a `global:` keybind is detected.
+    
+    Find in: System Settings → Privacy & Security → Accessibility
+  </Tab>
+  <Tab title="Linux">
+    Requires desktop environment support for [Global Shortcuts protocol](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html).
+    
+    **Supported**:
+    - KDE Plasma (5.27+)
+    - GNOME (48+)
+    - Hyprland (with manual config)
+    
+    **Not Supported**:
+    - Sway and other wlroots compositors
+  </Tab>
+</Tabs>
+
+<Note>
+`global:` implies `all:` (applies to all surfaces).
+</Note>
+
+### All Surfaces
+
+```ini
+keybind = all:ctrl+shift+r=reload_config
+```
+
+Applies action to all terminal surfaces, not just the focused one.
+
+### Unconsumed Input
+
+```ini
+keybind = unconsumed:ctrl+a=reload_config
+```
+
+Executes action **and** sends the key to the terminal application.
+
+<Warning>
+`global:` and `all:` keybinds always consume input (they're not tied to a specific surface).
+</Warning>
+
+### Performable Actions
+
+```ini
+keybind = performable:ctrl+shift+c=copy_to_clipboard
+```
+
+Only consumes input if the action can be performed. For example, `copy_to_clipboard` only triggers if there's a selection.
+
+<Info>
+Performable keybinds won't appear as menu shortcuts because menus force the action regardless of state.
+</Info>
+
+### Combining Prefixes
+
+Multiple prefixes can be used:
+
+```ini
+keybind = global:unconsumed:ctrl+a=reload_config
+```
+
+## Key Sequences
+
+Bind sequences of keys (leader keys, key chords):
+
+```ini
+keybind = ctrl+a>n=new_window
+keybind = ctrl+a>t=new_tab
+keybind = ctrl+a>x=close_surface
+```
+
+Press `ctrl+a`, then `n` to trigger `new_window`.
+
+<Warning>
+When using key sequences in CLI arguments, quote the value (since `>` is a special shell character):
+
+```bash
+ghostty --keybind='ctrl+a>n=new_window'
+```
+</Warning>
+
+### Sequence Behavior
+
+<Accordion title="What happens if I press an unbound key during a sequence?">
+- If a `catch_all` binding exists that would `ignore` the input, the entire sequence is **dropped**
+- Otherwise, the entire sequence is **sent** to the terminal as if no keybind existed
+</Accordion>
+
+<Accordion title="How do I output a prefix key?">
+Ghostty waits indefinitely for the next key. To force output of the prefix:
+
+1. Bind another key to send it: `ctrl+a>ctrl+a=text:...`
+2. Press an unbound key (sends both keys to terminal)
+</Accordion>
+
+<Accordion title="What if I bind a prefix that was already bound?">
+Sequences override previous prefix bindings:
+
+```ini
+keybind = ctrl+a=new_window
+keybind = ctrl+a>n=new_tab
+# Now ctrl+a does nothing (waits for 'n')
+```
+
+Binding a previously-sequenced prefix **unbinds** all its sequences:
+
+```ini
+keybind = ctrl+a>n=new_tab
+keybind = ctrl+a>t=new_window
+keybind = ctrl+a=something      # Unbinds ctrl+a>n and ctrl+a>t
+```
+</Accordion>
+
+<Warning>
+Key sequences are **not allowed** for `global:` or `all:` keybinds.
+</Warning>
+
+## Chained Actions
+
+Execute multiple actions from one keybind:
+
+```ini
+keybind = ctrl+a=new_window
+keybind = chain=goto_split:left
+keybind = chain=toggle_fullscreen
+```
+
+This binds `ctrl+a` to:
+1. Open a new window
+2. Move focus left
+3. Toggle fullscreen
+
+<Note>
+Each `chain` entry appends to the **most recent** keybind. You can chain as many actions as you want.
+</Note>
+
+<Warning>
+Chained actions **cannot** have prefixes like `global:` or `unconsumed:`. The flags from the original keybind apply to the entire chain.
+</Warning>
+
+### Chains with Sequences
+
+Chains work with key sequences:
+
+```ini
+keybind = ctrl+a>n=new_window
+keybind = chain=goto_split:left
+```
+
+Chains apply to the **most recent binding** in the sequence.
+
+<Info>
+Chained keybinds available since Ghostty 1.3.0.
+</Info>
+
+## Key Tables
+
+Create named sets of keybindings (modal input):
+
+```ini
+# Define a key table named "copy_mode"
+copy_mode/h=scroll_to_left
+copy_mode/j=scroll_down
+copy_mode/k=scroll_up
+copy_mode/l=scroll_to_right
+copy_mode/q=deactivate_key_table
+
+# Activate from main table
+keybind = ctrl+a>c=activate_key_table:copy_mode
+```
+
+<Note>
+Key tables are defined using `<table>/<binding>` syntax. Table names can contain anything except `/`, `=`, `+`, and `>`.
+</Note>
+
+### Table Operations
+
+```ini
+# Clear/reset a table
+copy_mode/
+
+# Activate a table
+keybind = ctrl+space=activate_key_table:copy_mode
+
+# Deactivate current table
+copy_mode/escape=deactivate_key_table
+
+# One-shot activation (auto-deactivates after one non-catch-all action)
+keybind = ctrl+g=activate_key_table_once:goto_mode
+```
+
+### Table Lookup
+
+<Info>
+Binding lookup proceeds from the **innermost table outward**. Keybinds in the default table remain available unless explicitly unbound in an inner table.
+</Info>
+
+### Table Stacking
+
+<Accordion title="Can I activate the same table twice?">
+You cannot activate a table that is already the **innermost** table. However, the same table can appear multiple times in the stack:
+
+✅ Valid: `A → B → A → B`  
+❌ Invalid: `A → B → B`
+</Accordion>
+
+### Tables with Other Features
+
+```ini
+# Key sequences work in tables
+copy_mode/ctrl+a>n=new_window
+
+# Prefixes work in tables
+copy_mode/global:ctrl+space=new_window
+```
+
+<Info>
+Key tables available since Ghostty 1.3.0.
+</Info>
+
+## Managing Keybindings
+
+### Clear All Keybinds
+
+```ini
+keybind = clear
+```
+
+<Warning>
+This removes **ALL** keybindings, including defaults! Use carefully.
+</Warning>
+
+### Unbind Specific Keys
+
+```ini
+# Method 1: unbind action
+keybind = ctrl+a=unbind
+
+# Method 2: Set later in config to override
+keybind = ctrl+a=different_action
+```
+
+### Show Active Keybinds
+
+```bash
+ghostty +list-keybinds
+```
+
+## Example Configurations
+
+### Vim-Style Navigation
+
+```ini
+keybind = alt+h=goto_split:left
+keybind = alt+j=goto_split:bottom
+keybind = alt+k=goto_split:top
+keybind = alt+l=goto_split:right
+```
+
+### Tmux-Style Leader Key
+
+```ini
+keybind = ctrl+a>c=new_tab
+keybind = ctrl+a>n=goto_tab:next
+keybind = ctrl+a>p=goto_tab:previous
+keybind = ctrl+a>x=close_surface
+keybind = ctrl+a>d=toggle_split_zoom
+keybind = ctrl+a>"|"=new_split:right
+keybind = ctrl+a>-=new_split:down
+
+# Send ctrl+a to terminal
+keybind = ctrl+a>ctrl+a=text:\x01
+```
+
+### Copy Mode (Key Table)
+
+```ini
+# Enter copy mode
+keybind = ctrl+shift+space=activate_key_table:copy
+
+# Copy mode bindings
+copy/
+copy/h=scroll_to_left
+copy/j=scroll_down
+copy/k=scroll_up
+copy/l=scroll_to_right
+copy/g=scroll_to_top
+copy/shift+g=scroll_to_bottom
+copy/y=copy_to_clipboard
+copy/escape=deactivate_key_table
+copy/q=deactivate_key_table
+```
+
+### Platform-Specific Keybinds
+
+<Tabs>
+  <Tab title="macOS">
+    ```ini
+    # macOS-style keybinds
+    keybind = super+c=copy_to_clipboard
+    keybind = super+v=paste_from_clipboard
+    keybind = super+n=new_window
+    keybind = super+t=new_tab
+    keybind = super+w=close_surface
+    ```
+  </Tab>
+  <Tab title="Linux">
+    ```ini
+    # Linux-style keybinds
+    keybind = ctrl+shift+c=copy_to_clipboard
+    keybind = ctrl+shift+v=paste_from_clipboard
+    keybind = ctrl+shift+n=new_window
+    keybind = ctrl+shift+t=new_tab
+    keybind = ctrl+shift+w=close_surface
+    ```
+  </Tab>
+</Tabs>
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="List Actions" icon="list" href="#actions">
+    Run `ghostty +list-actions` for all available actions
+  </Card>
+  <Card title="List Keybinds" icon="keyboard" href="#managing-keybindings">
+    Run `ghostty +list-keybinds` to see active bindings
+  </Card>
+  <Card title="W3C Key Codes" icon="code" href="https://www.w3.org/TR/uievents-code/">
+    Physical key code reference
+  </Card>
+  <Card title="Qt Keyboard Issues" icon="triangle-exclamation" href="https://doc.qt.io/qt-6/qkeysequence.html#keyboard-layout-issues">
+    Understanding keyboard layout limitations
+  </Card>
+</CardGroup>

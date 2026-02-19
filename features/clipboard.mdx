@@ -1,0 +1,354 @@
+---
+title: Clipboard
+description: Clipboard integration, OSC 52 support, and copy/paste configuration
+---
+
+Ghostty provides comprehensive clipboard support with configurable behavior for both system clipboard and terminal-initiated clipboard operations.
+
+## Basic Clipboard Operations
+
+### Copy and Paste
+
+<CardGroup cols={2}>
+  <Card title="Copy" icon="copy">
+    Select text and it's automatically copied (Linux/macOS default).
+    
+    Or use:
+    - **macOS**: `cmd+c`
+    - **Linux**: `ctrl+shift+c`
+  </Card>
+  
+  <Card title="Paste" icon="paste">
+    - **macOS**: `cmd+v`
+    - **Linux**: `ctrl+shift+v`
+    - **Middle-click**: Paste selection (Linux)
+  </Card>
+</CardGroup>
+
+### Copy on Select
+
+Automatically copy selected text to clipboard:
+
+```ini ~/.config/ghostty/config
+# Enable copy-on-select (default on Linux/macOS)
+copy-on-select = true
+
+# Disable copy-on-select
+copy-on-select = false
+
+# Always copy to both selection and system clipboard
+copy-on-select = clipboard
+```
+
+<Note>
+  On Linux, middle-click paste uses the selection clipboard and works even when `copy-on-select` is `false`.
+</Note>
+
+### Right-Click Actions
+
+Configure what right-click does:
+
+```ini
+# Show context menu (default)
+right-click-action = context-menu
+
+# Paste clipboard contents
+right-click-action = paste
+
+# Copy selection
+right-click-action = copy
+
+# Copy if text is selected, otherwise paste
+right-click-action = copy-or-paste
+
+# Do nothing
+right-click-action = ignore
+```
+
+## OSC 52 Support
+
+OSC 52 allows terminal applications to read from and write to the system clipboard. This is particularly useful for clipboard operations over SSH.
+
+### Configuration
+
+<CodeGroup>
+```ini Ask Before Reading
+# Prompt user before allowing clipboard reads (default)
+clipboard-read = ask
+```
+
+```ini Allow All Operations  
+# Allow apps to read/write freely
+clipboard-read = allow
+clipboard-write = allow
+```
+
+```ini Deny All Operations
+# Block clipboard access
+clipboard-read = deny
+clipboard-write = deny
+```
+</CodeGroup>
+
+Valid values:
+- `ask` - Prompt the user (default for clipboard-read)
+- `allow` - Allow unconditionally (default for clipboard-write)
+- `deny` - Deny all access
+
+### Testing OSC 52
+
+Test clipboard write support:
+
+```bash
+# Copy "Hello" to clipboard
+printf '\e]52;c;%s\a' "$(printf 'Hello' | base64)"
+```
+
+Test clipboard read (if `clipboard-read = allow`):
+
+```bash
+# Request clipboard contents
+printf '\e]52;c;?\a'
+```
+
+<Warning>
+  Allowing clipboard read (`clipboard-read = allow`) can be a security risk. Applications can silently read your clipboard contents.
+</Warning>
+
+## Clipboard Behavior
+
+### Trimming Whitespace
+
+Remove trailing whitespace when copying:
+
+```ini
+# Trim trailing spaces (default: true)
+clipboard-trim-trailing-spaces = true
+
+# Preserve all whitespace
+clipboard-trim-trailing-spaces = false
+```
+
+<Note>
+  Completely blank lines always have their whitespace trimmed.
+</Note>
+
+### Clearing Selection
+
+<Tabs>
+  <Tab title="After Copying">
+    Clear selection after copying:
+    
+    ```ini
+    # Keep selection visible after copying (default)
+    selection-clear-on-copy = false
+    
+    # Clear selection after copying
+    selection-clear-on-copy = true
+    ```
+  </Tab>
+  
+  <Tab title="When Typing">
+    Clear selection when typing:
+    
+    ```ini
+    # Clear selection when typing (default)
+    selection-clear-on-typing = true
+    
+    # Keep selection when typing
+    selection-clear-on-typing = false
+    ```
+    
+    Selection can still be cleared manually by clicking or pressing `escape`.
+  </Tab>
+</Tabs>
+
+### Paste Protection
+
+Prevent accidental execution of dangerous commands:
+
+```ini
+# Warn before pasting text with newlines (default: true)
+clipboard-paste-protection = true
+
+# Treat bracketed pastes as safe (default: true)  
+clipboard-paste-bracketed-safe = true
+```
+
+<Steps>
+  <Step title="Protection activates">
+    When pasting text containing newlines, Ghostty shows a confirmation dialog.
+  </Step>
+  
+  <Step title="Bracketed paste exception">
+    If the application has bracketed paste mode enabled, the paste is considered safe and no confirmation is shown (unless `clipboard-paste-bracketed-safe = false`).
+  </Step>
+</Steps>
+
+## Advanced Features
+
+### Clipboard Character Mapping
+
+Replace specific Unicode characters when copying to clipboard:
+
+```ini
+# Convert box-drawing characters to ASCII
+clipboard-codepoint-map = U+2500=U+002D  # Horizontal → hyphen
+clipboard-codepoint-map = U+2502=U+007C  # Vertical → pipe
+
+# Replace with text
+clipboard-codepoint-map = U+03A3=SUM     # Greek Sigma → "SUM"
+
+# Ranges
+clipboard-codepoint-map = U+2500-U+257F=U+002D  # All box-drawing
+```
+
+<Note>
+  This only applies to text copying, not URL copying.
+</Note>
+
+### Selection Word Characters
+
+Define what characters mark word boundaries during selection:
+
+```ini
+# Default word boundaries
+selection-word-chars = " \t'\"│`|:;,()[]{}<>$"
+
+# Treat dashes as part of words
+selection-word-chars = " \t'\"│`|:;,()[]{}<>$"
+```
+
+When double-clicking to select a word, selection stops at these characters.
+
+## Keybinding Examples
+
+<CodeGroup>
+```ini Custom Copy/Paste
+keybind = ctrl+c=copy_to_clipboard
+keybind = ctrl+v=paste_from_clipboard
+keybind = ctrl+shift+v=paste_from_selection
+```
+
+```ini Clipboard Management
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+
+# Clear selection
+keybind = escape=clear_selection
+```
+
+```ini Advanced Workflow
+# Copy and clear selection
+keybind = ctrl+c=copy_to_clipboard>clear_selection
+
+# Paste and clear
+keybind = ctrl+v=paste_from_clipboard>clear_selection
+```
+</CodeGroup>
+
+## Platform Differences
+
+### macOS
+
+- Uses the system pasteboard
+- Supports rich text copying (with formatting)
+- Integrates with Universal Clipboard (copy on Mac, paste on iPhone)
+
+### Linux
+
+- Two clipboards: **selection** (middle-click) and **system** (ctrl+v)
+- Selection clipboard is automatically populated when selecting text
+- System clipboard requires explicit copy action
+
+```ini
+# Configure copy-on-select behavior for Linux
+copy-on-select = true          # Use selection clipboard
+copy-on-select = clipboard     # Use both clipboards
+copy-on-select = false         # Explicit copy only
+```
+
+## SSH and Remote Clipboard
+
+When connected to a remote host via SSH, OSC 52 allows remote applications to access your local clipboard:
+
+<Steps>
+  <Step title="Enable OSC 52 write">
+    ```ini
+    clipboard-write = allow
+    ```
+  </Step>
+  
+  <Step title="Configure remote app">
+    Many applications support OSC 52:
+    
+    - **tmux**: `set -s set-clipboard on`
+    - **vim**: Use plugins like [vim-oscyank](https://github.com/ojroques/vim-oscyank)
+    - **neovim**: Built-in OSC 52 support
+  </Step>
+  
+  <Step title="Copy remotely">
+    When you copy text in the remote application, it appears in your local clipboard.
+  </Step>
+</Steps>
+
+### Example: Neovim Over SSH
+
+```lua
+-- Neovim config for OSC 52 clipboard
+vim.g.clipboard = {
+  name = 'OSC 52',
+  copy = {
+    ['+'] = require('vim.ui.clipboard.osc52').copy('+'),
+    ['*'] = require('vim.ui.clipboard.osc52').copy('*'),
+  },
+  paste = {
+    ['+'] = require('vim.ui.clipboard.osc52').paste('+'),
+    ['*'] = require('vim.ui.clipboard.osc52').paste('*'),
+  },
+}
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Clipboard not working over SSH">
+    1. Verify OSC 52 is enabled: `clipboard-write = allow`
+    2. Ensure remote application supports OSC 52
+    3. Check SSH doesn't strip escape sequences
+    4. Test with the OSC 52 printf command shown above
+  </Accordion>
+  
+  <Accordion title="Selection not copying automatically">
+    Check `copy-on-select` is enabled:
+    
+    ```ini
+    copy-on-select = true
+    ```
+  </Accordion>
+  
+  <Accordion title="Middle-click paste not working (Linux)">
+    Middle-click paste is always enabled and uses the selection clipboard. Make sure you've selected text first, or check if another application has cleared the selection.
+  </Accordion>
+  
+  <Accordion title="Paste confirmation dialog appearing too often">
+    If bracketed paste mode is available but still showing confirmation:
+    
+    ```ini
+    clipboard-paste-bracketed-safe = true
+    ```
+    
+    Or disable paste protection entirely (not recommended):
+    
+    ```ini
+    clipboard-paste-protection = false
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Related Configuration
+
+- [selection-foreground](/config/colors#selection) - Selection colors
+- [selection-background](/config/colors#selection) - Selection background
+- [keybind](/config/keybindings) - Customize copy/paste shortcuts
+- [OSC 52 specification](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Operating-System-Commands)

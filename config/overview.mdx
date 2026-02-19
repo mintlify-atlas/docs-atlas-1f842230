@@ -1,0 +1,234 @@
+---
+title: Configuration Overview
+description: Learn how to configure Ghostty terminal emulator
+---
+
+## Configuration File
+
+Ghostty uses a simple text-based configuration format. The configuration file is located at:
+
+- **Linux/BSD**: `$XDG_CONFIG_HOME/ghostty/config` or `~/.config/ghostty/config`
+- **macOS**: `~/.config/ghostty/config`
+
+<Note>
+The configuration file uses a simple `key = value` format. Lines starting with `#` are comments.
+</Note>
+
+## Basic Configuration Structure
+
+```ini
+# Basic example
+font-family = JetBrains Mono
+font-size = 14
+theme = rose-pine
+
+# Window settings
+window-padding-x = 4
+window-padding-y = 4
+
+# Key bindings
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+```
+
+## Loading Configuration
+
+### Default Configuration Files
+
+By default, Ghostty loads configuration from the XDG config path:
+
+```bash
+$XDG_CONFIG_HOME/ghostty/config
+```
+
+<Tip>
+You can disable loading default configuration files using `--config-default-files=false` on the command line.
+</Tip>
+
+### Additional Configuration Files
+
+Use the `config-file` directive to load additional configuration:
+
+```ini
+config-file = ~/.config/ghostty/keybinds.conf
+config-file = ~/.config/ghostty/colors.conf
+```
+
+<Accordion title="How do I prevent errors if a config file doesn't exist?">
+Prepend a `?` character to suppress errors:
+
+```ini
+config-file = ?~/.config/ghostty/optional.conf
+```
+</Accordion>
+
+<Accordion title="What order are config files loaded?">
+Configuration files are loaded **after** the configuration they're defined in. Later values override earlier ones.
+
+```ini
+font-size = 12
+config-file = "other.conf"  # If this sets font-size = 14
+# Final font-size will be 14
+```
+</Accordion>
+
+## Validating Configuration
+
+Validate your configuration without starting Ghostty:
+
+```bash
+ghostty +validate-config
+```
+
+This will check for syntax errors and invalid values.
+
+## Viewing Current Configuration
+
+Show all currently active configuration values:
+
+```bash
+ghostty +show-config
+```
+
+<Tip>
+This is useful for debugging which values are actually being used, especially when using multiple config files.
+</Tip>
+
+## Reloading Configuration
+
+Ghostty supports runtime configuration reloading for most settings.
+
+### Via Keybinding
+
+The default keybind is:
+
+<Tabs>
+  <Tab title="macOS">
+    `cmd+comma` or use the `reload_config` action
+  </Tab>
+  <Tab title="Linux/BSD">
+    `ctrl+shift+comma` or use the `reload_config` action
+  </Tab>
+</Tabs>
+
+### What Can Be Reloaded?
+
+<Info>
+Most configuration options can be reloaded at runtime. Options that cannot be reloaded are noted in their documentation.
+</Info>
+
+Things that **can** be reloaded:
+- Colors and themes
+- Font settings (for terminals that haven't manually adjusted font size)
+- Keybindings
+- Window padding
+- Custom shaders
+
+Things that **cannot** be reloaded:
+- `language` (requires full restart)
+- `background-opacity` on macOS (requires full restart)
+- Window decoration changes (applies to new windows only)
+
+## CLI Arguments vs Config File
+
+CLI arguments override config file settings:
+
+```bash
+# Config file has: font-size = 12
+ghostty --font-size=16  # Uses 16, not 12
+```
+
+### Special CLI Syntax
+
+Some configurations have special CLI shortcuts:
+
+```bash
+# Execute a command
+ghostty -e nvim file.txt
+
+# This sets initial-command and forces some behaviors:
+# - gtk-single-instance=false
+# - quit-after-last-window-closed=true
+# - shell-integration=detect (if not none)
+```
+
+## Configuration Commands
+
+Ghostty provides several `+` commands for working with configuration:
+
+| Command | Description |
+|---------|-------------|
+| `ghostty +validate-config` | Check configuration for errors |
+| `ghostty +show-config` | Display all active configuration |
+| `ghostty +list-fonts` | List available fonts |
+| `ghostty +list-themes` | List available themes |
+| `ghostty +list-actions` | List all keybind actions |
+| `ghostty +list-keybinds` | Show all configured keybinds |
+
+<Accordion title="How do I check what keybinds are currently active?">
+```bash
+ghostty +list-keybinds
+```
+
+This shows all active keybindings, including defaults.
+</Accordion>
+
+## Configuration Organization
+
+For complex setups, organize configuration into multiple files:
+
+```ini
+# ~/.config/ghostty/config
+config-file = ~/.config/ghostty/appearance.conf
+config-file = ~/.config/ghostty/fonts.conf
+config-file = ~/.config/ghostty/keybinds.conf
+config-file = ~/.config/ghostty/shell.conf
+```
+
+<Warning>
+Avoid circular dependencies! Configuration files that include each other will cause an error.
+</Warning>
+
+## Platform-Specific Configuration
+
+Some options only apply to specific platforms:
+
+```ini
+# macOS only
+macos-titlebar-style = transparent
+macos-option-as-alt = true
+
+# GTK/Linux only
+gtk-toolbar-style = both
+gtk-single-instance = true
+```
+
+<Note>
+Platform-specific options are silently ignored on unsupported platforms.
+</Note>
+
+## Conditional Configuration
+
+While Ghostty doesn't have built-in conditionals, you can use separate config files per platform:
+
+```bash
+# Load platform-specific config
+config-file = ~/.config/ghostty/$(uname -s).conf
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Appearance" icon="palette" href="/config/appearance">
+    Configure colors, themes, and visual styles
+  </Card>
+  <Card title="Fonts" icon="font" href="/config/fonts">
+    Set up fonts and typography
+  </Card>
+  <Card title="Keybindings" icon="keyboard" href="/config/keybindings">
+    Customize keyboard shortcuts
+  </Card>
+  <Card title="Window Settings" icon="window-maximize" href="/config/window">
+    Control window behavior and decorations
+  </Card>
+</CardGroup>

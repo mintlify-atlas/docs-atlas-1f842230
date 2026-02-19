@@ -1,80 +1,334 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start Guide
+description: Get up and running with Ghostty in under 5 minutes
 ---
 
-## Get started in three steps
+# Quick Start Guide
 
-Get your documentation site running locally and make your first customization.
+Get Ghostty running on your system in minutes. This guide assumes you've already [installed Ghostty](/installation).
 
-### Step 1: Set up your local environment
+## First Launch
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Launch Ghostty">
+    Open Ghostty from your Applications folder (macOS) or application launcher (Linux).
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    ```bash
+    # Or launch from terminal
+    ghostty
+    ```
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    You'll see a new terminal window with Ghostty's default theme and settings.
+  </Step>
 
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+  <Step title="Verify Installation">
+    Check that Ghostty is working correctly:
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```bash
+    # Check version
+    ghostty --version
+    
+    # List available commands
+    ghostty --help
+    ```
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Test Performance">
+    Experience Ghostty's speed:
+    
+    ```bash
+    # Fast text rendering
+    cat /usr/share/dict/words
+    
+    # Or generate some output
+    for i in {1..1000}; do echo "Line $i: Ghostty is fast!"; done
+    ```
+    
+    Notice how smoothly text renders even under heavy load.
+  </Step>
+</Steps>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+## Basic Configuration
 
-### Step 3: Go live
+Ghostty's configuration file is located at:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+- **macOS**: `~/.config/ghostty/config`
+- **Linux**: `~/.config/ghostty/config` (or `$XDG_CONFIG_HOME/ghostty/config`)
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+If the config file doesn't exist, create it along with the directory:
+
+```bash
+mkdir -p ~/.config/ghostty
+touch ~/.config/ghostty/config
+```
 </Note>
+
+### Essential Configuration
+
+Add these settings to your `~/.config/ghostty/config` file:
+
+<CodeGroup>
+```bash Basic Setup
+# Font configuration
+font-family = "JetBrains Mono"
+font-size = 13
+
+# Theme colors
+background = #1e1e2e
+foreground = #cdd6f4
+
+# Cursor settings
+cursor-style = block
+cursor-color = #f5e0dc
+```
+
+```bash Developer Setup
+# Font with ligatures
+font-family = "Fira Code"
+font-size = 12
+font-feature = +liga
+font-feature = +calt
+
+# Catppuccin Mocha theme
+background = #1e1e2e
+foreground = #cdd6f4
+
+# Palette colors
+palette = 0=#45475a
+palette = 1=#f38ba8
+palette = 2=#a6e3a1
+palette = 3=#f9e2af
+palette = 4=#89b4fa
+palette = 5=#f5c2e7
+palette = 6=#94e2d5
+palette = 7=#bac2de
+
+# Window settings
+window-padding-x = 10
+window-padding-y = 10
+window-theme = dark
+```
+
+```bash Minimal Setup
+# Just the essentials
+font-family = "SF Mono"
+font-size = 13
+theme = catppuccin-mocha
+```
+</CodeGroup>
+
+<Tip>
+Ghostty comes with built-in themes! Use `ghostty +list-themes` to see all available themes, then set one with `theme = theme-name` in your config.
+</Tip>
+
+### Apply Configuration Changes
+
+Ghostty automatically reloads configuration when you save changes. No restart required!
+
+```bash
+# Edit your config
+ghosstty +edit-config
+
+# Or validate your config
+ghosstty +validate-config
+
+# View current config
+ghosstty +show-config
+```
+
+## Essential Keybindings
+
+Ghostty comes with sensible defaults. Here are the most important shortcuts:
+
+### macOS
+
+| Action | Keybinding |
+|--------|------------|
+| New Window | `⌘ + N` |
+| New Tab | `⌘ + T` |
+| Close Tab/Window | `⌘ + W` |
+| Split Horizontal | `⌘ + D` |
+| Split Vertical | `⌘ + Shift + D` |
+| Next Tab | `⌘ + Shift + ]` |
+| Previous Tab | `⌘ + Shift + [` |
+| Settings | `⌘ + ,` |
+| Clear Screen | `⌘ + K` |
+
+### Linux
+
+| Action | Keybinding |
+|--------|------------|
+| New Window | `Ctrl + Shift + N` |
+| New Tab | `Ctrl + Shift + T` |
+| Close Tab/Window | `Ctrl + Shift + W` |
+| Split Horizontal | `Ctrl + Shift + D` |
+| Next Tab | `Ctrl + Tab` |
+| Previous Tab | `Ctrl + Shift + Tab` |
+| Clear Screen | `Ctrl + Shift + K` |
+
+<Info>
+All keybindings are fully customizable. See [Keybindings Configuration](/config/keybindings) for details.
+</Info>
+
+## Working with Windows and Splits
+
+<Steps>
+  <Step title="Create a Split">
+    Split your terminal horizontally or vertically:
+    
+    - **Horizontal**: `⌘ + D` (macOS) or `Ctrl + Shift + D` (Linux)
+    - **Vertical**: `⌘ + Shift + D` (macOS)
+    
+    Navigate between splits using focus keybindings.
+  </Step>
+
+  <Step title="Open Multiple Tabs">
+    Create tabs for different tasks:
+    
+    - **New Tab**: `⌘ + T` (macOS) or `Ctrl + Shift + T` (Linux)
+    - **Switch Tabs**: `⌘ + Shift + ]` / `[` (macOS) or `Ctrl + Tab` (Linux)
+  </Step>
+
+  <Step title="Multiple Windows">
+    Open multiple independent Ghostty windows:
+    
+    - **New Window**: `⌘ + N` (macOS) or `Ctrl + Shift + N` (Linux)
+  </Step>
+</Steps>
+
+## Discovering Fonts and Themes
+
+### List Available Fonts
+
+```bash
+# See all fonts Ghostty can find
+ghosstty +list-fonts
+
+# Search for a specific font
+ghosstty +list-fonts | grep -i "mono"
+```
+
+### Explore Built-in Themes
+
+```bash
+# List all themes
+ghosstty +list-themes
+
+# Some popular themes:
+# - catppuccin-mocha
+# - dracula
+# - nord
+# - solarized-dark
+# - tokyo-night
+```
+
+Add your chosen theme to config:
+
+```bash
+theme = catppuccin-mocha
+```
+
+## Enable Shell Integration
+
+Shell integration adds powerful features like:
+
+- Jump between prompts
+- Semantic understanding of shell output
+- Better clipboard integration
+- Command status indicators
+
+<Tabs>
+  <Tab title="Bash">
+    Add to your `~/.bashrc`:
+    
+    ```bash
+    if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
+        source "$GHOSTTY_RESOURCES_DIR/shell-integration/bash/ghostty.bash"
+    fi
+    ```
+  </Tab>
+  
+  <Tab title="Zsh">
+    Add to your `~/.zshrc`:
+    
+    ```zsh
+    if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
+        source "$GHOSTTY_RESOURCES_DIR/shell-integration/zsh/ghostty.zsh"
+    fi
+    ```
+  </Tab>
+  
+  <Tab title="Fish">
+    Add to your `~/.config/fish/config.fish`:
+    
+    ```fish
+    if set -q GHOSTTY_RESOURCES_DIR
+        source "$GHOSTTY_RESOURCES_DIR/shell-integration/fish/ghostty.fish"
+    end
+    ```
+  </Tab>
+</Tabs>
+
+<Info>
+Learn more about shell integration features in the [Shell Integration guide](/features/shell-integration).
+</Info>
+
+## Useful CLI Commands
+
+Ghostty provides helpful CLI tools:
+
+```bash
+# Edit config in your default editor
+ghosstty +edit-config
+
+# Validate your configuration
+ghosstty +validate-config
+
+# Show effective configuration (including defaults)
+ghosstty +show-config
+
+# List all keybindings
+ghosstty +list-keybinds
+
+# List all available actions
+ghosstty +list-actions
+
+# Check for crash reports
+ghosstty +crash-report
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deep Dive into Configuration" icon="sliders" href="/config/overview">
+    Explore all configuration options for fonts, colors, keybindings, and more
+  </Card>
+  <Card title="Customize Appearance" icon="palette" href="/config/appearance">
+    Learn about themes, colors, and visual customization
+  </Card>
+  <Card title="Master Features" icon="graduation-cap" href="/features/themes">
+    Discover advanced features like custom themes and performance tuning
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/guides/troubleshooting">
+    Get help with common issues and configuration problems
+  </Card>
+</CardGroup>
+
+## Getting Help
+
+If you run into issues:
+
+1. **Check logs**: Ghostty logs to stderr by default
+   - **macOS**: `sudo log stream --level debug --predicate 'subsystem=="com.mitchellh.ghostty"'`
+   - **Linux**: `journalctl --user --unit app-com.mitchellh.ghostty.service`
+
+2. **Validate config**: Run `ghostty +validate-config` to catch syntax errors
+
+3. **Review documentation**: Check the [Troubleshooting Guide](/guides/troubleshooting)
+
+4. **Join the community**: Report issues on [GitHub](https://github.com/ghostty-org/ghostty)
+
+<Tip>
+You're now ready to use Ghostty! Experiment with different themes, fonts, and configurations to make it your own.
+</Tip>

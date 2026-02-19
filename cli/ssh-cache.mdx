@@ -1,0 +1,294 @@
+---
+title: ssh-cache
+description: Manage the SSH terminfo cache for automatic remote host setup
+---
+
+The `ssh-cache` command manages the SSH terminfo cache used for automatic remote host setup when SSH integration is enabled.
+
+## Usage
+
+```bash
+ghostty +ssh-cache [options]
+```
+
+## Description
+
+When SSH integration is enabled with `shell-integration-features = ssh-terminfo`, Ghostty automatically installs its terminfo database on remote hosts when you SSH into them. This command manages the cache of successful installations to avoid redundant uploads.
+
+The cache stores hostnames (or `user@hostname` combinations) along with timestamps of when terminfo was successfully installed. Entries older than a configurable expiration period can be automatically removed, though by default entries never expire.
+
+## Options
+
+<ParamField path="--clear" type="boolean">
+  Clear the entire SSH cache, removing all stored hostnames. After clearing, Ghostty will re-upload terminfo to all hosts on next connection.
+</ParamField>
+
+<ParamField path="--add" type="string">
+  Manually add a hostname to the cache. Accepts formats:
+  - `hostname` - Just the hostname
+  - `user@hostname` - User and hostname combination
+  
+  Use this to pre-populate the cache or mark a host as having terminfo installed.
+</ParamField>
+
+<ParamField path="--remove" type="string">
+  Remove a specific hostname from the cache. Next SSH connection to this host will trigger terminfo upload. Accepts same formats as `--add`.
+</ParamField>
+
+<ParamField path="--host" type="string">
+  Check if a specific host is in the cache. Returns exit code 0 if cached, 1 if not. Useful for scripting.
+</ParamField>
+
+<ParamField path="--expire-days" type="number">
+  Set a custom expiration period in days for cache entries. Entries older than this will be considered invalid and removed during cache operations.
+  
+  By default, entries never expire.
+</ParamField>
+
+<ParamField path="-h, --help" type="flag">
+  Display help information for this command.
+</ParamField>
+
+<Warning>
+  Only one of `--clear`, `--add`, `--remove`, or `--host` should be specified per command. If multiple are specified, one will be executed but which one is not guaranteed. Always split multiple actions into separate commands.
+</Warning>
+
+## Examples
+
+### List All Cached Hosts
+
+```bash
+ghostty +ssh-cache
+```
+
+<CodeGroup>
+```text Output
+Cached hosts (3):
+  server1.example.com (5 days ago)
+  user@server2.example.com (yesterday)
+  192.168.1.100 (today)
+```
+</CodeGroup>
+
+### Check If Host Is Cached
+
+```bash
+ghostty +ssh-cache --host=example.com
+echo $?  # 0 if cached, 1 if not
+```
+
+<CodeGroup>
+```text Cached Output
+'example.com' has Ghostty terminfo installed.
+```
+
+```text Not Cached Output
+'example.com' does not have Ghostty terminfo installed.
+```
+</CodeGroup>
+
+### Add Host to Cache
+
+```bash
+ghostty +ssh-cache --add=example.com
+```
+
+<CodeGroup>
+```text Output
+Added 'example.com' to cache.
+```
+</CodeGroup>
+
+Or with a user:
+
+```bash
+ghostty +ssh-cache --add=user@example.com
+```
+
+<CodeGroup>
+```text Output
+Added 'user@example.com' to cache.
+```
+</CodeGroup>
+
+### Remove Host from Cache
+
+```bash
+ghostty +ssh-cache --remove=example.com
+```
+
+<CodeGroup>
+```text Output
+Removed 'example.com' from cache.
+```
+</CodeGroup>
+
+Next time you SSH to this host, terminfo will be uploaded again.
+
+### Clear Entire Cache
+
+```bash
+ghostty +ssh-cache --clear
+```
+
+<CodeGroup>
+```text Output
+Cache cleared.
+```
+</CodeGroup>
+
+### Set Expiration Period
+
+```bash
+ghostty +ssh-cache --expire-days=30
+```
+
+Entries older than 30 days will be automatically removed during cache operations.
+
+## Cache Behavior
+
+### Automatic Cache Updates
+
+When SSH integration is enabled:
+
+1. Ghostty detects SSH connections
+2. Checks if the target host is in the cache
+3. If not cached, uploads terminfo to the remote host
+4. On successful upload, adds host to cache
+5. Subsequent connections skip the upload
+
+### Cache Storage Location
+
+The cache is stored in:
+- Linux: `$XDG_CACHE_HOME/ghostty/ssh-cache` or `~/.cache/ghostty/ssh-cache`
+- macOS: `~/Library/Caches/com.mitchellh.ghostty/ssh-cache`
+
+### Entry Format
+
+Cache entries can be:
+- Just hostname: `example.com`
+- User + hostname: `user@example.com`
+- IP address: `192.168.1.100`
+- User + IP: `user@192.168.1.100`
+
+Ghostty stores whatever format you used to connect.
+
+## Use Cases
+
+### Pre-populate Cache
+
+Before bulk SSH operations:
+
+```bash Script
+#!/bin/bash
+servers=(
+    "web1.example.com"
+    "web2.example.com"
+    "db.example.com"
+)
+
+for server in "${servers[@]}"; do
+    ghostty +ssh-cache --add="$server"
+done
+```
+
+### Force Terminfo Re-upload
+
+If terminfo is corrupted on a remote host:
+
+```bash
+ghostty +ssh-cache --remove=broken-host.com
+ssh broken-host.com  # Will re-upload terminfo
+```
+
+### Check Cache in Scripts
+
+```bash Script
+#!/bin/bash
+if ghostty +ssh-cache --host="$1"; then
+    echo "Host already has terminfo"
+else
+    echo "First connection to this host"
+fi
+```
+
+### Periodic Cache Maintenance
+
+```bash Cron Job
+# Clear old cache entries monthly
+0 0 1 * * ghostty +ssh-cache --expire-days=30
+```
+
+## Troubleshooting
+
+### Terminfo Not Loading on Remote Host
+
+1. Check if host is cached:
+   ```bash
+   ghostty +ssh-cache --host=problem-host.com
+   ```
+
+2. Remove from cache to force re-upload:
+   ```bash
+   ghostty +ssh-cache --remove=problem-host.com
+   ```
+
+3. Connect again to trigger upload:
+   ```bash
+   ssh problem-host.com
+   ```
+
+### Invalid Hostname Error
+
+```text Error
+Error: Invalid hostname format 'bad@host@name'
+Expected format: hostname or user@hostname
+```
+
+**Solution**: Use valid hostname format:
+- `hostname.com`
+- `user@hostname.com`
+
+### Cache Is Locked Error
+
+```text Error
+Error: Cache is busy, try again
+```
+
+**Solution**: Another Ghostty process is modifying the cache. Wait a moment and retry.
+
+## SSH Integration Configuration
+
+Enable SSH terminfo integration in your config:
+
+```text config
+# Enable SSH terminfo upload
+shell-integration-features = ssh-terminfo
+
+# Or enable all shell integration features
+shell-integration-features = true
+```
+
+## Notes
+
+<Note>
+  The cache only tracks successful terminfo installations. If upload fails, the host is not added to the cache and will be retried on the next connection.
+</Note>
+
+<Note>
+  Entries in the cache don't expire by default. Use `--expire-days` to set an expiration policy if desired.
+</Note>
+
+<Note>
+  The cache is per-user on your local machine. Each user maintains their own separate SSH terminfo cache.
+</Note>
+
+<Tip>
+  If you have many remote hosts that you access regularly, consider pre-populating the cache to avoid the small delay on first connection.
+</Tip>
+
+## See Also
+
+- [Shell Integration](/features/shell-integration)
+- [SSH Integration](/features/ssh)
+- [Configuration Reference](/config/reference)

@@ -1,0 +1,229 @@
+---
+title: list-actions
+description: List all available keybind actions
+---
+
+The `list-actions` command displays all available keybind actions that can be assigned to key combinations in Ghostty.
+
+## Usage
+
+```bash
+ghostty +list-actions [options]
+```
+
+## Description
+
+This command lists all keybind actions available in Ghostty. These are the actions you can assign to keys in your configuration file using the `keybind` option.
+
+<Note>
+  These keybind actions are distinct from CLI actions (like `+list-fonts`, `+show-config`, etc.). To see CLI actions, use `ghostty +help`.
+</Note>
+
+## Options
+
+<ParamField path="--docs" type="boolean">
+  Print documentation for each action, including a description of what the action does and any parameters it accepts.
+</ParamField>
+
+<ParamField path="-h, --help" type="flag">
+  Display help information for this command.
+</ParamField>
+
+## Examples
+
+### List All Actions
+
+```bash
+ghostty +list-actions
+```
+
+<CodeGroup>
+```text Output
+cancel
+clear_screen
+close_all_windows
+close_surface
+close_tab
+close_window
+copy_to_clipboard
+decrease_font_size
+goto_split:...
+goto_tab:...
+ignore
+increase_font_size
+inspector:...
+jump_to_prompt:...
+new_split:...
+new_tab
+new_window
+next_split
+next_tab
+open_config
+open_url
+paste_from_clipboard
+paste_from_selection
+previous_split
+previous_tab
+quit
+reload_config
+reset_font_size
+resize_split:...
+scroll_page_down
+scroll_page_up
+scroll_to_bottom
+scroll_to_top
+select_all
+size_limit_disable
+size_limit_enable
+text_action:...
+toggle_fullscreen
+toggle_split_zoom
+toggle_tab_overview
+toggle_visibility
+write_screen_file:...
+write_scrollback_file:...
+```
+</CodeGroup>
+
+### List Actions with Documentation
+
+```bash
+ghostty +list-actions --docs
+```
+
+<CodeGroup>
+```text Output
+cancel
+  Cancel the current operation, such as closing a search or dismissing
+  a dialog.
+
+clear_screen
+  Clear the terminal screen. The scrollback is preserved.
+
+close_surface
+  Close the current surface (terminal). If this is the last surface,
+  the window will be closed.
+
+copy_to_clipboard
+  Copy the current selection to the system clipboard.
+
+goto_tab:<n>
+  Go to tab number <n>. Tabs are numbered starting from 1.
+  
+  Example: goto_tab:3
+
+new_split:right
+  Create a new split to the right of the current split.
+  
+  Arguments:
+    - right: Split to the right
+    - left: Split to the left
+    - down: Split below
+    - up: Split above
+...
+```
+</CodeGroup>
+
+### Search for Specific Actions
+
+```bash
+ghostty +list-actions | grep "split"
+```
+
+<CodeGroup>
+```text Output
+goto_split:...
+new_split:...
+next_split
+previous_split
+resize_split:...
+toggle_split_zoom
+```
+</CodeGroup>
+
+### Find Actions with Parameters
+
+```bash
+ghostty +list-actions | grep ":"
+```
+
+Lists only actions that accept parameters (indicated by `:...`).
+
+## Common Actions
+
+Here are some commonly used actions:
+
+### Window & Tab Management
+- `new_window` - Open a new window
+- `new_tab` - Open a new tab
+- `close_surface` - Close current terminal
+- `close_tab` - Close current tab
+- `close_window` - Close current window
+- `quit` - Quit Ghostty
+
+### Navigation
+- `goto_tab:N` - Go to tab number N
+- `next_tab` / `previous_tab` - Navigate between tabs
+- `next_split` / `previous_split` - Navigate between splits
+- `jump_to_prompt:N` - Jump to Nth prompt (requires shell integration)
+
+### Clipboard
+- `copy_to_clipboard` - Copy selection to clipboard
+- `paste_from_clipboard` - Paste from clipboard
+- `paste_from_selection` - Paste from selection (X11)
+
+### Display
+- `increase_font_size` / `decrease_font_size` - Adjust font size
+- `reset_font_size` - Reset font size to default
+- `toggle_fullscreen` - Toggle fullscreen mode
+- `clear_screen` - Clear the screen
+
+### Splits
+- `new_split:right|left|up|down` - Create new split
+- `resize_split:direction,amount` - Resize split
+- `toggle_split_zoom` - Zoom/unzoom current split
+
+### Configuration
+- `reload_config` - Reload configuration file
+- `open_config` - Open config in editor
+
+## Using Actions in Config
+
+To use these actions in your configuration:
+
+```text keybind Syntax
+keybind = <key_combination>=<action>
+```
+
+### Examples
+
+```text Example Config
+# Simple actions
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+
+# Actions with parameters
+keybind = ctrl+1=goto_tab:1
+keybind = ctrl+2=goto_tab:2
+keybind = super+right=new_split:right
+keybind = super+down=new_split:down
+
+# Chained actions
+keybind = ctrl+shift+t=new_tab,goto_tab:1
+```
+
+## Notes
+
+<Note>
+  Actions marked with `:...` require parameters. Use `--docs` to see what parameters each action accepts.
+</Note>
+
+<Note>
+  Some actions may only work on certain platforms or require specific features to be enabled (like shell integration).
+</Note>
+
+## See Also
+
+- [list-keybinds](/cli/list-keybinds) - List current keybindings
+- [Keybinding Configuration](/config/keybinds)
+- [show-config](/cli/show-config)

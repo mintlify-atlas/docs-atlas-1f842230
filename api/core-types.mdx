@@ -1,0 +1,539 @@
+---
+title: Core Types
+description: Core types and data structures in the libghostty C API
+---
+
+# Core Types
+
+This page documents the core types and data structures used throughout the libghostty C API.
+
+## Opaque Types
+
+These types are opaque pointers managed entirely by libghostty. Never dereference these pointers directly.
+
+<ResponseField name="ghostty_app_t" type="void*">
+  The main application instance. Manages global state, configuration, and coordinates multiple surfaces.
+  
+  Created with `ghostty_app_new()` and freed with `ghostty_app_free()`.
+</ResponseField>
+
+<ResponseField name="ghostty_config_t" type="void*">
+  Configuration object containing terminal settings and behavior.
+  
+  Created with `ghostty_config_new()` and freed with `ghostty_config_free()`.
+</ResponseField>
+
+<ResponseField name="ghostty_surface_t" type="void*">
+  A terminal surface (a single terminal instance). Each surface represents one terminal that can be rendered.
+  
+  Created with `ghostty_surface_new()` and freed with `ghostty_surface_free()`.
+</ResponseField>
+
+<ResponseField name="ghostty_inspector_t" type="void*">
+  An inspector/debugger interface for viewing terminal state.
+  
+  Obtained with `ghostty_surface_inspector()` and freed with `ghostty_inspector_free()`.
+</ResponseField>
+
+## Platform Types
+
+### ghostty_platform_e
+
+Defines the target platform for a surface.
+
+```c
+typedef enum {
+  GHOSTTY_PLATFORM_INVALID,
+  GHOSTTY_PLATFORM_MACOS,
+  GHOSTTY_PLATFORM_IOS,
+} ghostty_platform_e;
+```
+
+<ResponseField name="GHOSTTY_PLATFORM_INVALID" type="enum">
+  Invalid/uninitialized platform.
+</ResponseField>
+
+<ResponseField name="GHOSTTY_PLATFORM_MACOS" type="enum">
+  macOS platform with Metal rendering and NSView integration.
+</ResponseField>
+
+<ResponseField name="GHOSTTY_PLATFORM_IOS" type="enum">
+  iOS platform with Metal rendering and UIView integration.
+</ResponseField>
+
+### ghostty_platform_macos_s
+
+Platform-specific data for macOS.
+
+```c
+typedef struct {
+  void* nsview;
+} ghostty_platform_macos_s;
+```
+
+<ResponseField name="nsview" type="void*">
+  Pointer to an NSView (cast to `void*`). The terminal will render into this view using Metal.
+</ResponseField>
+
+### ghostty_platform_ios_s
+
+Platform-specific data for iOS.
+
+```c
+typedef struct {
+  void* uiview;
+} ghostty_platform_ios_s;
+```
+
+<ResponseField name="uiview" type="void*">
+  Pointer to a UIView (cast to `void*`). The terminal will render into this view using Metal.
+</ResponseField>
+
+### ghostty_platform_u
+
+Union of platform-specific data.
+
+```c
+typedef union {
+  ghostty_platform_macos_s macos;
+  ghostty_platform_ios_s ios;
+} ghostty_platform_u;
+```
+
+Use the appropriate field based on `ghostty_platform_e`.
+
+## Surface Configuration
+
+### ghostty_surface_config_s
+
+Configuration for creating a new terminal surface.
+
+```c
+typedef struct {
+  ghostty_platform_e platform_tag;
+  ghostty_platform_u platform;
+  void* userdata;
+  double scale_factor;
+  float font_size;
+  const char* working_directory;
+  const char* command;
+  ghostty_env_var_s* env_vars;
+  size_t env_var_count;
+  const char* initial_input;
+  bool wait_after_command;
+  ghostty_surface_context_e context;
+} ghostty_surface_config_s;
+```
+
+<ResponseField name="platform_tag" type="ghostty_platform_e" required>
+  The target platform for this surface.
+</ResponseField>
+
+<ResponseField name="platform" type="ghostty_platform_u" required>
+  Platform-specific configuration data. Use the field corresponding to `platform_tag`.
+</ResponseField>
+
+<ResponseField name="userdata" type="void*">
+  Arbitrary pointer to user data. Retrieved with `ghostty_surface_userdata()`.
+</ResponseField>
+
+<ResponseField name="scale_factor" type="double">
+  Display scale factor (e.g., 2.0 for Retina displays). Used for high-DPI rendering.
+</ResponseField>
+
+<ResponseField name="font_size" type="float">
+  Font size in points.
+</ResponseField>
+
+<ResponseField name="working_directory" type="const char*">
+  Initial working directory for the shell. NULL for user's home directory.
+</ResponseField>
+
+<ResponseField name="command" type="const char*">
+  Command to run instead of the default shell. NULL for default shell.
+</ResponseField>
+
+<ResponseField name="env_vars" type="ghostty_env_var_s*">
+  Array of environment variables to set for the shell.
+</ResponseField>
+
+<ResponseField name="env_var_count" type="size_t">
+  Number of environment variables in `env_vars`.
+</ResponseField>
+
+<ResponseField name="initial_input" type="const char*">
+  Text to send to the terminal after initialization. NULL for no initial input.
+</ResponseField>
+
+<ResponseField name="wait_after_command" type="bool">
+  If true, keep the terminal open after the command exits.
+</ResponseField>
+
+<ResponseField name="context" type="ghostty_surface_context_e">
+  Context in which the surface is being created (window, tab, split).
+</ResponseField>
+
+### ghostty_surface_context_e
+
+Defines the UI context for a surface.
+
+```c
+typedef enum {
+  GHOSTTY_SURFACE_CONTEXT_WINDOW = 0,
+  GHOSTTY_SURFACE_CONTEXT_TAB = 1,
+  GHOSTTY_SURFACE_CONTEXT_SPLIT = 2,
+} ghostty_surface_context_e;
+```
+
+<ResponseField name="GHOSTTY_SURFACE_CONTEXT_WINDOW" type="enum">
+  Surface is the primary terminal in a window.
+</ResponseField>
+
+<ResponseField name="GHOSTTY_SURFACE_CONTEXT_TAB" type="enum">
+  Surface is in a tab.
+</ResponseField>
+
+<ResponseField name="GHOSTTY_SURFACE_CONTEXT_SPLIT" type="enum">
+  Surface is in a split pane.
+</ResponseField>
+
+### ghostty_surface_size_s
+
+Describes the size of a terminal surface.
+
+```c
+typedef struct {
+  uint16_t columns;
+  uint16_t rows;
+  uint32_t width_px;
+  uint32_t height_px;
+  uint32_t cell_width_px;
+  uint32_t cell_height_px;
+} ghostty_surface_size_s;
+```
+
+<ResponseField name="columns" type="uint16_t">
+  Number of character columns.
+</ResponseField>
+
+<ResponseField name="rows" type="uint16_t">
+  Number of character rows.
+</ResponseField>
+
+<ResponseField name="width_px" type="uint32_t">
+  Width in pixels.
+</ResponseField>
+
+<ResponseField name="height_px" type="uint32_t">
+  Height in pixels.
+</ResponseField>
+
+<ResponseField name="cell_width_px" type="uint32_t">
+  Width of a single character cell in pixels.
+</ResponseField>
+
+<ResponseField name="cell_height_px" type="uint32_t">
+  Height of a single character cell in pixels.
+</ResponseField>
+
+## Runtime Configuration
+
+### ghostty_runtime_config_s
+
+Configuration for runtime callbacks that libghostty uses to communicate with the host application.
+
+```c
+typedef struct {
+  void* userdata;
+  bool supports_selection_clipboard;
+  ghostty_runtime_wakeup_cb wakeup_cb;
+  ghostty_runtime_action_cb action_cb;
+  ghostty_runtime_read_clipboard_cb read_clipboard_cb;
+  ghostty_runtime_confirm_read_clipboard_cb confirm_read_clipboard_cb;
+  ghostty_runtime_write_clipboard_cb write_clipboard_cb;
+  ghostty_runtime_close_surface_cb close_surface_cb;
+} ghostty_runtime_config_s;
+```
+
+<ResponseField name="userdata" type="void*">
+  Arbitrary pointer passed to all callbacks. Retrieved with `ghostty_app_userdata()`.
+</ResponseField>
+
+<ResponseField name="supports_selection_clipboard" type="bool">
+  Whether the platform supports X11-style selection clipboard (middle-click paste).
+</ResponseField>
+
+<ResponseField name="wakeup_cb" type="ghostty_runtime_wakeup_cb" required>
+  Callback invoked when libghostty needs the event loop to wake up.
+  
+  ```c
+  typedef void (*ghostty_runtime_wakeup_cb)(void* userdata);
+  ```
+</ResponseField>
+
+<ResponseField name="action_cb" type="ghostty_runtime_action_cb" required>
+  Callback invoked when the terminal performs an action (ring bell, change title, etc.).
+  
+  ```c
+  typedef bool (*ghostty_runtime_action_cb)(
+      ghostty_app_t app,
+      ghostty_target_s target,
+      ghostty_action_s action
+  );
+  ```
+  
+  Return `true` if the action was handled, `false` otherwise.
+</ResponseField>
+
+<ResponseField name="read_clipboard_cb" type="ghostty_runtime_read_clipboard_cb">
+  Callback invoked when the terminal needs to read from the clipboard.
+  
+  ```c
+  typedef void (*ghostty_runtime_read_clipboard_cb)(
+      void* userdata,
+      ghostty_clipboard_e clipboard,
+      void* request_userdata
+  );
+  ```
+</ResponseField>
+
+<ResponseField name="confirm_read_clipboard_cb" type="ghostty_runtime_confirm_read_clipboard_cb">
+  Callback invoked when the terminal needs confirmation before reading the clipboard (OSC 52).
+  
+  ```c
+  typedef void (*ghostty_runtime_confirm_read_clipboard_cb)(
+      void* userdata,
+      const char* message,
+      void* request_userdata,
+      ghostty_clipboard_request_e request
+  );
+  ```
+</ResponseField>
+
+<ResponseField name="write_clipboard_cb" type="ghostty_runtime_write_clipboard_cb">
+  Callback invoked when the terminal needs to write to the clipboard.
+  
+  ```c
+  typedef void (*ghostty_runtime_write_clipboard_cb)(
+      void* userdata,
+      ghostty_clipboard_e clipboard,
+      const ghostty_clipboard_content_s* content,
+      size_t content_count,
+      bool confirm
+  );
+  ```
+</ResponseField>
+
+<ResponseField name="close_surface_cb" type="ghostty_runtime_close_surface_cb">
+  Callback invoked when a surface should be closed.
+  
+  ```c
+  typedef void (*ghostty_runtime_close_surface_cb)(
+      void* userdata,
+      bool confirmed
+  );
+  ```
+</ResponseField>
+
+## Clipboard Types
+
+### ghostty_clipboard_e
+
+Clipboard selection type.
+
+```c
+typedef enum {
+  GHOSTTY_CLIPBOARD_STANDARD,
+  GHOSTTY_CLIPBOARD_SELECTION,
+} ghostty_clipboard_e;
+```
+
+<ResponseField name="GHOSTTY_CLIPBOARD_STANDARD" type="enum">
+  Standard system clipboard (Ctrl+C/Ctrl+V).
+</ResponseField>
+
+<ResponseField name="GHOSTTY_CLIPBOARD_SELECTION" type="enum">
+  X11 selection clipboard (middle-click paste).
+</ResponseField>
+
+### ghostty_clipboard_content_s
+
+Content for clipboard operations.
+
+```c
+typedef struct {
+  const char* mime;
+  const char* data;
+} ghostty_clipboard_content_s;
+```
+
+<ResponseField name="mime" type="const char*">
+  MIME type of the content (e.g., "text/plain", "text/html").
+</ResponseField>
+
+<ResponseField name="data" type="const char*">
+  The clipboard data as a null-terminated string.
+</ResponseField>
+
+### ghostty_clipboard_request_e
+
+Type of clipboard request.
+
+```c
+typedef enum {
+  GHOSTTY_CLIPBOARD_REQUEST_PASTE,
+  GHOSTTY_CLIPBOARD_REQUEST_OSC_52_READ,
+  GHOSTTY_CLIPBOARD_REQUEST_OSC_52_WRITE,
+} ghostty_clipboard_request_e;
+```
+
+## Utility Types
+
+### ghostty_string_s
+
+A string returned by libghostty that must be freed.
+
+```c
+typedef struct {
+  const char* ptr;
+  uintptr_t len;
+  bool sentinel;
+} ghostty_string_s;
+```
+
+<ResponseField name="ptr" type="const char*">
+  Pointer to the string data.
+</ResponseField>
+
+<ResponseField name="len" type="uintptr_t">
+  Length of the string in bytes.
+</ResponseField>
+
+<ResponseField name="sentinel" type="bool">
+  If true, the string is null-terminated.
+</ResponseField>
+
+Free with `ghostty_string_free()`.
+
+### ghostty_info_s
+
+Information about the libghostty build.
+
+```c
+typedef struct {
+  ghostty_build_mode_e build_mode;
+  const char* version;
+  uintptr_t version_len;
+} ghostty_info_s;
+```
+
+<ResponseField name="build_mode" type="ghostty_build_mode_e">
+  The build mode (debug, release, etc.).
+</ResponseField>
+
+<ResponseField name="version" type="const char*">
+  Version string (not null-terminated, use `version_len`).
+</ResponseField>
+
+<ResponseField name="version_len" type="uintptr_t">
+  Length of the version string.
+</ResponseField>
+
+### ghostty_build_mode_e
+
+```c
+typedef enum {
+  GHOSTTY_BUILD_MODE_DEBUG,
+  GHOSTTY_BUILD_MODE_RELEASE_SAFE,
+  GHOSTTY_BUILD_MODE_RELEASE_FAST,
+  GHOSTTY_BUILD_MODE_RELEASE_SMALL,
+} ghostty_build_mode_e;
+```
+
+### ghostty_diagnostic_s
+
+A configuration diagnostic (warning or error).
+
+```c
+typedef struct {
+  const char* message;
+} ghostty_diagnostic_s;
+```
+
+<ResponseField name="message" type="const char*">
+  Human-readable diagnostic message.
+</ResponseField>
+
+## Color Types
+
+### ghostty_color_scheme_e
+
+System color scheme preference.
+
+```c
+typedef enum {
+  GHOSTTY_COLOR_SCHEME_LIGHT = 0,
+  GHOSTTY_COLOR_SCHEME_DARK = 1,
+} ghostty_color_scheme_e;
+```
+
+### ghostty_config_color_s
+
+RGB color value.
+
+```c
+typedef struct {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+} ghostty_config_color_s;
+```
+
+<ResponseField name="r" type="uint8_t">
+  Red component (0-255).
+</ResponseField>
+
+<ResponseField name="g" type="uint8_t">
+  Green component (0-255).
+</ResponseField>
+
+<ResponseField name="b" type="uint8_t">
+  Blue component (0-255).
+</ResponseField>
+
+## Environment Variables
+
+### ghostty_env_var_s
+
+An environment variable key-value pair.
+
+```c
+typedef struct {
+  const char* key;
+  const char* value;
+} ghostty_env_var_s;
+```
+
+<ResponseField name="key" type="const char*">
+  Environment variable name.
+</ResponseField>
+
+<ResponseField name="value" type="const char*">
+  Environment variable value.
+</ResponseField>
+
+## Constants
+
+### GHOSTTY_SUCCESS
+
+```c
+#define GHOSTTY_SUCCESS 0
+```
+
+Return value indicating successful operation. Used by functions like `ghostty_init()`.
+
+## See Also
+
+- [Configuration API](/api/configuration) - Configuration types and functions
+- [Input Types](/api/input) - Input-related types
+- [Actions](/api/rendering) - Action types and rendering

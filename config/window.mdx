@@ -1,0 +1,519 @@
+---
+title: Window Configuration
+description: Configure window behavior, decorations, tabs, and splits in Ghostty
+---
+
+## Window Size and Position
+
+### Initial Window Size
+
+```ini
+# Set initial window size (in grid cells)
+window-width = 120
+window-height = 40
+```
+
+<Note>
+Both `window-width` and `window-height` must be set to take effect. If only one is set, it's ignored.
+</Note>
+
+<Accordion title="Can I set window size in pixels?">
+Not currently. Window size is specified in terminal grid cells. Pixel-based sizing may be added in the future.
+</Accordion>
+
+<Accordion title="What's the minimum window size?">
+Windows smaller than 10 columns by 4 rows are not allowed.
+</Accordion>
+
+<Warning>
+**Linux/GTK**: Window size doesn't properly account for window decorations. Grid dimensions won't exactly match when decorations are enabled. Disable decorations (`window-decoration = none`) for accurate sizing.
+</Warning>
+
+### Window Position
+
+```ini
+# Set window position (in pixels)
+window-position-x = 100
+window-position-y = 100
+```
+
+<Tabs>
+  <Tab title="macOS">
+    Position is relative to the **top-left corner** of the visible screen area (below the menu bar if visible).
+    
+    ✅ Supported
+  </Tab>
+  <Tab title="Linux/GTK">
+    ❌ Not supported
+    
+    GTK doesn't support setting window position (Wayland restriction). Only works on X11 for legacy compatibility.
+  </Tab>
+</Tabs>
+
+<Note>
+Both `window-position-x` and `window-position-y` must be set to take effect.
+</Note>
+
+### Maximize and Fullscreen
+
+```ini
+# Start maximized
+maximize = true
+
+# Start fullscreen
+fullscreen = true
+```
+
+<Info>
+These settings apply to **all new windows**, not just the first one.
+</Info>
+
+<Warning>
+**macOS**: `fullscreen = true` doesn't work with `window-decoration = none` (native fullscreen requires decorations).
+</Warning>
+
+## Window Decorations
+
+Control window chrome (titlebar, borders, etc.):
+
+```ini
+window-decoration = auto      # Auto-detect (default)
+window-decoration = none      # No decorations
+window-decoration = client    # Client-side decorations
+window-decoration = server    # Server-side decorations
+
+# Legacy boolean values
+window-decoration = true      # Same as "auto"
+window-decoration = false     # Same as "none"
+```
+
+<Tabs>
+  <Tab title="macOS">
+    Only `none` and `auto`/`true` are meaningful:
+    - `none`: Removes titlebar and borders, disables tabs
+    - `auto`/`true`: Standard macOS window
+    
+    Use `macos-titlebar-style = hidden` to hide titlebar while keeping borders.
+  </Tab>
+  <Tab title="Linux">
+    - `auto`: Best native appearance for your desktop
+    - `client`: Client-side decorations (GTK-drawn)
+    - `server`: Server-side decorations (requires compositor support like KDE Plasma)
+    - `none`: No decorations
+    
+    If `server` is requested but unsupported, falls back to `client`.
+  </Tab>
+</Tabs>
+
+<Note>
+Toggle decorations at runtime with the `toggle_window_decorations` keybind action.
+</Note>
+
+## Window Padding
+
+### Horizontal and Vertical Padding
+
+```ini
+# Symmetric padding
+window-padding-x = 4  # 4pt left and right
+window-padding-y = 4  # 4pt top and bottom
+
+# Asymmetric padding
+window-padding-x = 2,4  # 2pt left, 4pt right
+window-padding-y = 2,8  # 2pt top, 8pt bottom
+```
+
+<Warning>
+Excessive padding will squish the grid. Pick reasonable values. Warnings appear in logs for unreasonable values.
+</Warning>
+
+<Info>
+Padding changes at runtime only affect **new terminals** (windows, tabs, splits).
+</Info>
+
+### Padding Balance
+
+```ini
+# Automatically balance extra padding
+window-padding-balance = true
+```
+
+When viewport dimensions aren't perfectly divisible by cell size, extra padding exists. This option balances it across all edges instead of leaving it on the right and bottom.
+
+### Padding Color
+
+```ini
+window-padding-color = background      # Use background color (default)
+window-padding-color = extend          # Extend nearest cell color
+window-padding-color = extend-always   # Always extend (ignore heuristics)
+```
+
+<Accordion title="When does 'extend' disable?">
+On primary screen applications (not alternate screen like Vim), vertical extension is disabled if:
+- Nearest row has default background color cells
+- Nearest row is a prompt (requires shell integration)
+- Nearest row contains powerline characters
+
+These heuristics prevent ugly powerline artifacts.
+</Accordion>
+
+## Window Behavior
+
+### VSync (macOS)
+
+```ini
+# Sync rendering with screen refresh
+window-vsync = true   # Minimize tearing (default)
+window-vsync = false  # Maximize responsiveness
+```
+
+<Warning>
+**macOS**: Out-of-sync rendering can cause kernel panics (macOS 14.4+) and performance issues with external displays over DisplayLink.
+
+Set to `false` only if you need minimal input latency and understand the risks.
+</Warning>
+
+<Note>
+Changing `window-vsync` at runtime only affects new terminals.
+</Note>
+
+### Step Resize (macOS)
+
+```ini
+# Resize window in cell-size increments
+window-step-resize = true
+```
+
+When enabled, window resizing snaps to grid cell sizes. When disabled, resizes in pixel increments.
+
+### Working Directory Inheritance
+
+```ini
+# New windows inherit working directory
+window-inherit-working-directory = true  # Default
+
+# New tabs inherit working directory
+tab-inherit-working-directory = true     # Default
+
+# New splits inherit working directory
+split-inherit-working-directory = true   # Default
+```
+
+<Info>
+Inheritance requires **shell integration**. Without it, the default `working-directory` is used.
+</Info>
+
+### Font Size Inheritance
+
+```ini
+# New windows inherit font size from focused window
+window-inherit-font-size = true  # Default
+```
+
+When `false`, new windows use the configured `font-size`.
+
+## Window Title
+
+### Fixed Title
+
+```ini
+# Force a specific window title
+title = My Terminal
+
+# Blank title (effectively hides it)
+title = " "
+```
+
+<Note>
+When set, Ghostty ignores all title change escape sequences from programs.
+</Note>
+
+<Accordion title="How do I get the default title back after changing it?">
+Reload config with `title` unset or removed. The next title change escape sequence will be honored, but you may need to restart programs (like Neovim) to trigger it.
+</Accordion>
+
+### Window Subtitle (GTK)
+
+```ini
+window-subtitle = false                # No subtitle (default)
+window-subtitle = working-directory    # Show working directory
+```
+
+<Note>
+**GTK only** (since 1.1.0)
+</Note>
+
+### Title Font (macOS)
+
+```ini
+# Set custom titlebar font
+window-title-font-family = SF Pro Display
+```
+
+If unset, the system default font is used. Any font available on the system may be used (not limited to monospace).
+
+## Tabs
+
+### Tab Visibility (GTK)
+
+```ini
+window-show-tab-bar = auto     # Show when 2+ tabs (default)
+window-show-tab-bar = always   # Always show
+window-show-tab-bar = never    # Never show (use keybinds/overview)
+```
+
+<Note>
+Currently only supported on Linux (GTK).
+</Note>
+
+### Tab Position
+
+```ini
+window-new-tab-position = current  # After focused tab (default)
+window-new-tab-position = end      # At end of tab list
+```
+
+## Splits
+
+### Split Appearance
+
+```ini
+# Unfocused split opacity (0.15-1.0)
+unfocused-split-opacity = 0.7
+
+# Unfocused split dim color
+unfocused-split-fill = #000000
+
+# Split divider color (since 1.1.0)
+split-divider-color = #3E4451
+```
+
+### Preserve Zoom
+
+Control zoom behavior when navigating splits:
+
+```ini
+split-preserve-zoom = navigation  # Keep zoom when switching splits
+split-preserve-zoom = no-navigation  # Unzoom when switching (default)
+```
+
+<Info>
+By default, any operation changing focus or layout unzooms. With `navigation`, the zoomed state moves to the newly focused split.
+
+Available since 1.3.0.
+</Info>
+
+## Resize Overlay
+
+### When to Show
+
+```ini
+resize-overlay = always       # Always show
+resize-overlay = never        # Never show
+resize-overlay = after-first  # Not on first creation (default)
+```
+
+### Overlay Position
+
+```ini
+resize-overlay-position = center        # Default
+resize-overlay-position = top-left
+resize-overlay-position = top-center
+resize-overlay-position = top-right
+resize-overlay-position = bottom-left
+resize-overlay-position = bottom-center
+resize-overlay-position = bottom-right
+```
+
+### Overlay Duration
+
+```ini
+# How long to show overlay (default: 750ms)
+resize-overlay-duration = 1s
+resize-overlay-duration = 500ms
+resize-overlay-duration = 1s500ms
+```
+
+## Window State
+
+### Save and Restore (macOS)
+
+```ini
+window-save-state = default  # System behavior (default)
+window-save-state = always   # Always save on exit
+window-save-state = never    # Never save
+```
+
+<Accordion title="What does 'default' do?">
+On macOS:
+- Saves state if app is **forcibly terminated**
+- Saves state if configured systemwide in Settings.app
+
+On Linux: No effect (not implemented).
+</Accordion>
+
+<Warning>
+Changing to `never` while Ghostty isn't running prevents restoring state on next launch. Changing from `never` while not running won't restore previous state (state only saved on exit).
+</Warning>
+
+## Window Theme
+
+```ini
+window-theme = auto     # Based on terminal background (default)
+window-theme = system   # Follow system theme
+window-theme = light    # Always light
+window-theme = dark     # Always dark
+window-theme = ghostty  # Use Ghostty colors (Linux only)
+```
+
+<Note>
+On macOS with `macos-titlebar-style = tabs` or `transparent`, window theme is automatically determined by background luminosity.
+</Note>
+
+### Titlebar Colors (GTK)
+
+```ini
+# Only works with window-theme = ghostty
+window-titlebar-background = #282C34
+window-titlebar-foreground = #FFFFFF
+```
+
+## Linux/GTK-Specific
+
+### Application Class
+
+```ini
+# X11 WM_CLASS, Wayland app ID, DBus name
+class = com.mitchellh.ghostty  # Default
+```
+
+<Warning>
+Changing `class` creates separate Ghostty instances with `gtk-single-instance=true`. May break `.desktop` file launching and DBus activation.
+
+Must follow [GTK ID requirements](https://docs.gtk.org/gio/type_func.Application.id_is_valid.html).
+</Warning>
+
+### X11 Instance Name
+
+```ini
+# X11 WM_CLASS instance name
+x11-instance-name = ghostty  # Default
+```
+
+<Note>
+Only affects X11. No effect on Wayland.
+</Note>
+
+## macOS-Specific
+
+### Titlebar Style
+
+```ini
+macos-titlebar-style = transparent  # Transparent titlebar (default)
+macos-titlebar-style = native       # Native macOS titlebar
+macos-titlebar-style = tabs         # Custom integrated tab bar
+macos-titlebar-style = hidden       # Hidden titlebar, keeps borders
+```
+
+<Accordion title="What are the differences between titlebar styles?">
+- **native**: Standard macOS titlebar matching window theme
+- **transparent**: Native but transparent, shows background color
+- **tabs**: Custom titlebar integrating tab bar, matches terminal background
+- **hidden**: Removes titlebar but keeps rounded corners and borders
+</Accordion>
+
+<Warning>
+**tabs** style on macOS 13 and below: Saved window state won't restore tabs correctly. macOS 14+ works fine.
+</Warning>
+
+<Info>
+**hidden** style: Window can't be dragged by titlebar. Use `option+click` on resizable frame areas to drag (standard macOS behavior).
+</Info>
+
+### Window Buttons (macOS)
+
+```ini
+macos-window-buttons = visible  # Show traffic lights (default)
+macos-window-buttons = hidden   # Hide traffic lights
+```
+
+<Note>
+No effect when `window-decoration = none` or `macos-titlebar-style = hidden` (buttons always hidden).
+
+Changing at runtime only affects new windows. Since 1.2.0.
+</Note>
+
+### Proxy Icon (macOS)
+
+```ini
+macos-titlebar-proxy-icon = visible  # Show folder icon (default)
+macos-titlebar-proxy-icon = hidden   # Hide folder icon
+```
+
+The proxy icon represents the current working directory. Only visible with native titlebar style.
+
+<Info>
+Changes at runtime apply to all windows, but only take effect after their working directory changes again (e.g., `cd` to another directory).
+</Info>
+
+### Window Shadow (macOS)
+
+```ini
+macos-window-shadow = true   # Show shadow (default)
+macos-window-shadow = false  # No shadow
+```
+
+<Tip>
+With window managers and transparency, `false` may look better.
+</Tip>
+
+### Non-Native Fullscreen (macOS)
+
+```ini
+macos-non-native-fullscreen = false          # Native fullscreen (default)
+macos-non-native-fullscreen = true           # Fast fullscreen, hide menu
+macos-non-native-fullscreen = visible-menu   # Fast fullscreen, show menu
+macos-non-native-fullscreen = padded-notch   # Fast fullscreen, pad notch
+```
+
+<Warning>
+**Important**: Tabs **do not work** in non-native fullscreen mode (titlebar is removed, macOS tabs require it).
+
+If you fullscreen a tabbed window, the focused tab goes fullscreen while others remain in a background window.
+</Warning>
+
+<Accordion title="What's the difference between native and non-native?">
+- **Native**: Uses macOS spaces with animations (slower)
+- **Non-native**: Instant fullscreen without animations (faster)
+
+`padded-notch` prevents window from being obscured by the notch on applicable devices.
+</Accordion>
+
+## Initial Window
+
+```ini
+# Create initial window on startup
+initial-window = true   # Default
+initial-window = false  # Don't create window
+```
+
+<Warning>
+If `quit-after-last-window-closed = true` and `initial-window = false`, Ghostty quits after the delay if no window is ever created.
+</Warning>
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Appearance" icon="palette" href="/config/appearance">
+    Colors and visual customization
+  </Card>
+  <Card title="Terminal Behavior" icon="terminal" href="/config/terminal">
+    Terminal-specific settings
+  </Card>
+  <Card title="Keybindings" icon="keyboard" href="/config/keybindings">
+    Window and split navigation keybinds
+  </Card>
+  <Card title="Shell Integration" icon="code" href="/config/terminal#shell-integration">
+    Working directory inheritance
+  </Card>
+</CardGroup>

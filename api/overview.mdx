@@ -1,0 +1,170 @@
+---
+title: libghostty C API Overview
+description: Introduction to the libghostty C API for embedding Ghostty terminal emulator
+---
+
+# libghostty C API Overview
+
+The libghostty C API enables you to embed a fast, feature-rich terminal emulator into any application. This library provides the core terminal functionality that powers the Ghostty terminal emulator.
+
+<Warning>
+  The libghostty API is currently used primarily by the macOS app and is not yet stabilized for general-purpose embedding. The API may change significantly between releases.
+</Warning>
+
+## What is libghostty?
+
+libghostty is a C-compatible library that provides:
+
+- **Full terminal emulation** - Standards-compliant VT100/xterm emulation
+- **Native rendering** - Metal on macOS, OpenGL on Linux
+- **Cross-platform support** - macOS, iOS, Linux
+- **Modern features** - Ligatures, color schemes, splits, tabs
+- **High performance** - Dedicated IO threads, GPU-accelerated rendering
+
+## Use Cases
+
+Common use cases for embedding libghostty:
+
+- **Native terminal apps** - Build platform-native terminal emulators (like the Ghostty macOS app)
+- **IDE/Editor integration** - Embed terminals in code editors and IDEs
+- **DevOps tools** - Add terminal capabilities to development and operations tools
+- **Educational software** - Interactive coding environments and tutorials
+
+## Architecture
+
+The libghostty API is organized around several key concepts:
+
+```c
+// Core types
+typedef void* ghostty_app_t;        // Application instance
+typedef void* ghostty_config_t;     // Configuration
+typedef void* ghostty_surface_t;    // Terminal surface
+typedef void* ghostty_inspector_t;  // Inspector/debugger
+```
+
+### Application Flow
+
+1. **Initialize** - Call `ghostty_init()` to set up global state
+2. **Configure** - Create and configure `ghostty_config_t`
+3. **Create App** - Initialize `ghostty_app_t` with runtime callbacks
+4. **Create Surfaces** - Create one or more `ghostty_surface_t` for terminals
+5. **Event Loop** - Call `ghostty_app_tick()` regularly and handle callbacks
+6. **Render** - Call `ghostty_surface_draw()` when rendering is needed
+7. **Cleanup** - Free surfaces, app, and config on shutdown
+
+## Platform Support
+
+<Tabs>
+  <Tab title="macOS">
+    Full support with Metal rendering:
+    - SwiftUI/AppKit integration
+    - Metal rendering backend
+    - CoreText font discovery
+    - Native menu and window chrome
+    
+    ```c
+    ghostty_surface_config_s config = {
+      .platform_tag = GHOSTTY_PLATFORM_MACOS,
+      .platform = { .macos = { .nsview = myNSView } },
+      .scale_factor = 2.0,
+      // ...
+    };
+    ```
+  </Tab>
+  <Tab title="iOS">
+    Experimental support for iOS:
+    - UIKit integration
+    - Metal rendering
+    - Touch input handling
+    
+    ```c
+    ghostty_surface_config_s config = {
+      .platform_tag = GHOSTTY_PLATFORM_IOS,
+      .platform = { .ios = { .uiview = myUIView } },
+      .scale_factor = 3.0,
+      // ...
+    };
+    ```
+  </Tab>
+  <Tab title="Linux">
+    GTK-based integration:
+    - OpenGL rendering
+    - Fontconfig/FreeType fonts
+    - Native GTK widgets
+  </Tab>
+</Tabs>
+
+## Quick Example
+
+Here's a minimal example of embedding libghostty:
+
+```c
+#include <ghostty.h>
+
+// Runtime callbacks
+void wakeup_cb(void* userdata) {
+    // Wake up event loop
+}
+
+bool action_cb(ghostty_app_t app, ghostty_target_s target, ghostty_action_s action) {
+    // Handle actions from terminal
+    return true;
+}
+
+int main(int argc, char** argv) {
+    // Initialize global state
+    if (ghostty_init(argc, (char**)argv) != GHOSTTY_SUCCESS) {
+        return 1;
+    }
+    
+    // Create configuration
+    ghostty_config_t config = ghostty_config_new();
+    ghostty_config_load_default_files(config);
+    ghostty_config_finalize(config);
+    
+    // Set up runtime callbacks
+    ghostty_runtime_config_s runtime = {
+        .userdata = NULL,
+        .wakeup_cb = wakeup_cb,
+        .action_cb = action_cb,
+        // ... other callbacks
+    };
+    
+    // Create app
+    ghostty_app_t app = ghostty_app_new(&runtime, config);
+    
+    // Create surface
+    ghostty_surface_config_s surf_config = ghostty_surface_config_new();
+    surf_config.platform_tag = GHOSTTY_PLATFORM_MACOS;
+    // ... configure platform-specific fields
+    
+    ghostty_surface_t surface = ghostty_surface_new(app, &surf_config);
+    
+    // Event loop
+    while (running) {
+        ghostty_app_tick(app);
+        ghostty_surface_draw(surface);
+    }
+    
+    // Cleanup
+    ghostty_surface_free(surface);
+    ghostty_app_free(app);
+    ghostty_config_free(config);
+    
+    return 0;
+}
+```
+
+## Next Steps
+
+- [Embedding Guide](/api/embedding) - Step-by-step tutorial for embedding
+- [Core Types](/api/core-types) - Detailed type documentation
+- [Configuration](/api/configuration) - Configuration API reference
+- [Input Handling](/api/input) - Keyboard and mouse input
+- [Rendering](/api/rendering) - Surface rendering and display
+
+## API Stability
+
+The current libghostty API is **not stable**. Future versions of libghostty-vt will provide a stable, cross-platform terminal parsing library. The full libghostty embedding API will be stabilized in a future release.
+
+See the [libghostty blog post](https://mitchellh.com/writing/libghostty-is-coming) for more details on the roadmap.

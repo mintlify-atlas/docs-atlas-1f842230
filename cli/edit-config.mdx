@@ -1,0 +1,237 @@
+---
+title: edit-config
+description: Open the Ghostty configuration file in your default editor
+---
+
+The `edit-config` command opens the Ghostty configuration file in the editor specified by your `$VISUAL` or `$EDITOR` environment variables.
+
+## Usage
+
+```bash
+ghostty +edit-config
+```
+
+## Description
+
+This command provides a quick way to edit your Ghostty configuration. It opens the default user-specific configuration file in your preferred terminal text editor.
+
+The command uses the `$VISUAL` environment variable first, falling back to `$EDITOR` if `$VISUAL` is not set. If neither is set, it displays an error with the configuration file path so you can open it manually.
+
+<Warning>
+  This command will **not** automatically reload the configuration after editing. You must manually reload using:
+  - The application menu option
+  - A configured keybind (typically bound to `reload_config` action)
+  - Restarting Ghostty
+</Warning>
+
+## Configuration File Locations
+
+The command opens the default user configuration file:
+
+### Linux/BSD
+- `$XDG_CONFIG_HOME/ghostty/config` (typically `~/.config/ghostty/config`)
+
+### macOS
+Ghostty checks these locations in priority order:
+1. `$XDG_CONFIG_HOME/ghostty/config` (if set)
+2. `~/Library/Application Support/com.mitchellh.ghostty/config`
+3. `~/.config/ghostty/config`
+
+Whichever path exists and is non-empty is prioritized. If neither exists, the Application Support directory is preferred.
+
+## Prerequisites
+
+### Setting Up Your Editor
+
+Set one of these environment variables in your shell configuration:
+
+```bash .bashrc / .zshrc
+# Use vim as editor
+export EDITOR=vim
+export VISUAL=vim
+
+# Or nano
+export EDITOR=nano
+
+# Or neovim
+export EDITOR=nvim
+export VISUAL=nvim
+```
+
+### VISUAL vs EDITOR
+
+- `$VISUAL` - Used for "visual" editors (vim, emacs, etc.)
+- `$EDITOR` - Used for line-based editors (ed, sed, etc.)
+- Ghostty prefers `$VISUAL` over `$EDITOR` if both are set
+
+## Examples
+
+### Basic Usage
+
+```bash
+ghostty +edit-config
+```
+
+Opens the configuration file in your default editor.
+
+### Set Editor and Open Config
+
+```bash
+export EDITOR=vim
+ghostty +edit-config
+```
+
+### One-Time Editor Override
+
+```bash
+VISUAL=nano ghostty +edit-config
+```
+
+Use a different editor just for this command.
+
+### Create Config If Missing
+
+```bash
+ghostty +edit-config
+```
+
+If the configuration file doesn't exist, Ghostty creates it with default settings before opening.
+
+## Error Messages
+
+### Editor Not Set
+
+```text Error
+The $EDITOR or $VISUAL environment variable is not set or is empty.
+This environment variable is required to edit the Ghostty configuration
+via this CLI command.
+
+Please set the environment variable to your preferred terminal
+text editor and try again.
+
+If you prefer to edit the configuration file another way,
+you can find the configuration file at the following path:
+
+/home/user/.config/ghostty/config
+```
+
+**Solution**: Set `$EDITOR` or `$VISUAL` in your shell configuration.
+
+### Editor Execution Failed
+
+```text Error
+Failed to execute the editor. Error code=FileNotFound.
+
+This is usually due to the executable path not existing, invalid
+permissions, or the shell environment not being set up correctly.
+
+Editor: my-editor
+Path: /home/user/.config/ghostty/config
+```
+
+**Solution**: Verify the editor command is in your `$PATH` and is executable.
+
+## Platform Support
+
+### Linux/BSD/macOS
+Fully supported using the `exec` system call to launch your editor.
+
+### Windows
+<Warning>
+  The `+edit-config` command is **not currently supported on Windows**. The command will display an error with the configuration file path for manual editing.
+</Warning>
+
+```text Windows Error
+The `ghostty +edit-config` command is not supported on Windows.
+Please edit the configuration file manually at the following path:
+
+C:\Users\username\AppData\Roaming\ghostty\config
+```
+
+## Workflow
+
+### Typical Edit Session
+
+1. Run `ghostty +edit-config`
+2. Make your changes in the editor
+3. Save and quit the editor
+4. Reload Ghostty configuration:
+   - Press your reload keybind (e.g., `super+shift+,`)
+   - Or restart Ghostty
+
+### Validate After Editing
+
+```bash
+# Edit config
+ghostty +edit-config
+
+# Validate changes
+ghostty +validate-config
+
+# View what changed
+ghostty +show-config
+```
+
+### Edit and Test Workflow
+
+```bash Script
+#!/bin/bash
+# Edit, validate, and reload in one command
+ghostty +edit-config && \
+ghostty +validate-config && \
+echo "Config valid - reload Ghostty to apply changes"
+```
+
+## Tips
+
+<Tip>
+  Use `show-config --default --docs > reference.txt` to generate a complete reference file with all available options and their documentation.
+</Tip>
+
+<Tip>
+  Set up a keybinding for quick config access:
+  ```text
+  keybind = super+comma=open_config
+  ```
+  This uses the `open_config` action which has the same effect as `+edit-config`.
+</Tip>
+
+<Tip>
+  Consider using a simple editor like `nano` if you're new to terminal editors:
+  ```bash
+  export EDITOR=nano
+  ```
+</Tip>
+
+## Related Configuration
+
+### Auto-Reload (Future)
+
+Ghostty plans to support automatic configuration reloading in the future. Until then, manual reload is required after editing.
+
+### Config File Watching
+
+You can set up external file watching to automatically reload:
+
+```bash Using fswatch
+fswatch ~/.config/ghostty/config | while read; do
+  killall -SIGUSR1 ghostty  # If supported
+done
+```
+
+## Notes
+
+<Note>
+  The command uses the POSIX `exec` system call on Unix-like systems, which replaces the current process with the editor. This is why the command doesn't return until you exit the editor.
+</Note>
+
+<Note>
+  If you have multiple Ghostty configuration files (via includes or conditional configs), this command only opens the main default configuration file, not included files.
+</Note>
+
+## See Also
+
+- [show-config](/cli/show-config) - Display current configuration
+- [validate-config](/cli/validate-config) - Validate configuration file
+- [Configuration Reference](/config/reference)
+- [Configuration Files](/config/files)
